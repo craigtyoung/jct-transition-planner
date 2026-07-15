@@ -6,6 +6,20 @@
 <title>JCT Transition Planner — Financial Model</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="style.css">
+<style>
+  .bd-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .bd-row .bd-label{flex:1;padding:8px 10px;border:1px solid var(--gray-200,#e2e8f0);border-radius:8px;font-size:14px}
+  .bd-row .bd-amt{width:190px}
+  .bd-remove{border:none;background:transparent;color:var(--gray-500,#64748b);cursor:pointer;font-size:14px;padding:6px 8px;border-radius:6px;line-height:1}
+  .bd-remove:hover{background:var(--gray-50,#f1f5f9);color:var(--red,#dc2626)}
+  .bd-foot{display:flex;align-items:center;justify-content:space-between;margin-top:12px;flex-wrap:wrap;gap:10px}
+  .bd-total{font-size:14px;color:var(--gray-500,#64748b)}
+  .bd-total strong{color:var(--navy,#0f2540);font-size:16px;margin-left:6px}
+  .bd-btn{border:1px solid var(--navy,#0f2540);background:#fff;color:var(--navy,#0f2540);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer}
+  .bd-btn:hover{background:var(--navy,#0f2540);color:#fff}
+  .bd-clear{margin-top:12px;border:none;background:transparent;color:var(--gray-500,#64748b);font-size:12px;text-decoration:underline;cursor:pointer;padding:0}
+  .bd-clear:hover{color:var(--red,#dc2626)}
+</style>
 </head>
 <body>
 
@@ -56,6 +70,17 @@
         <div class="input-prefix"><span class="prefix">$</span>
           <input type="text" id="cfg-buildcost" oninput="onConfigValueChange()" onfocus="fmtFocus(this)" onblur="fmtBlur(this,onConfigValueChange)">
         </div>
+      </div>
+    </div>
+
+    <!-- Build Cost Breakdown (collapsible, per-config) -->
+    <div class="section" style="margin-top:16px">
+      <div class="collapsible-header" onclick="toggleBreakdown(this)">
+        <div class="card-title" style="margin-bottom:0">Build Cost Breakdown <span id="bd-config-label" style="color:var(--gray-500);font-weight:500;font-size:13px"></span></div>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="collapsible-body" id="breakdown-body">
+        <div id="breakdown-content" style="padding-top:14px"></div>
       </div>
     </div>
   </div>
@@ -342,6 +367,7 @@ function selectConfig(key, doSave = true) {
   document.getElementById('cfg-buildcost').value = (cfg.buildCost || 0).toLocaleString('en-CA');
   document.getElementById('new-buildcost').value = (cfg.buildCost || 0).toLocaleString('en-CA');
   document.getElementById('config-label-display').textContent = cfg.label;
+  renderBreakdown();
   recalc();
   if (doSave) schedSave();
 }
@@ -507,6 +533,121 @@ function recalcPartner(netOverride) {
 function togglePartner(header) {
   header.classList.toggle('open');
   document.getElementById('partner-body').classList.toggle('open');
+}
+
+// ---- Build Cost Breakdown (per-config, collapsible, opt-in) ----
+const DEFAULT_BUILD_ITEMS = ['Bubble', 'Grade Beam', 'Clubhouse', 'Install', 'Court Surface (Quartz)', 'Nets'];
+
+function escapeAttr(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+function breakdownTotal(items) {
+  return (items || []).reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+}
+function setBuildCostInputs(val) {
+  const s = val ? Number(val).toLocaleString('en-CA') : '';
+  const a = document.getElementById('cfg-buildcost');
+  const b = document.getElementById('new-buildcost');
+  if (a) a.value = s;
+  if (b) b.value = s;
+}
+function setBuildCostReadonly(ro) {
+  ['cfg-buildcost', 'new-buildcost'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.readOnly = ro;
+    el.style.background = ro ? 'var(--gray-50)' : '';
+    el.style.cursor = ro ? 'not-allowed' : '';
+    el.title = ro ? 'Calculated from the Build Cost Breakdown below' : '';
+  });
+}
+
+function toggleBreakdown(header) {
+  header.classList.toggle('open');
+  document.getElementById('breakdown-body').classList.toggle('open');
+}
+
+function renderBreakdown() {
+  const cfg = model.configurations[model.selectedConfig];
+  const box = document.getElementById('breakdown-content');
+  const lbl = document.getElementById('bd-config-label');
+  if (!cfg || !box) return;
+  if (lbl) lbl.textContent = '· ' + cfg.label;
+
+  const items = cfg.buildBreakdown;
+  if (!items || items.length === 0) {
+    setBuildCostReadonly(false);
+    box.innerHTML =
+      '<div style="color:var(--gray-500);font-size:13px;margin-bottom:12px">No itemized breakdown for this configuration. Build Cost is entered manually above.</div>' +
+      '<button class="bd-btn" onclick="startBreakdown()">+ Start itemized breakdown</button>';
+    return;
+  }
+
+  setBuildCostReadonly(true);
+  const rows = items.map((it, idx) => `
+    <div class="bd-row">
+      <input class="bd-label" type="text" value="${escapeAttr(it.label)}" placeholder="Cost item" oninput="editBreakdown(${idx},'label',this.value)">
+      <div class="input-prefix bd-amt"><span class="prefix">$</span>
+        <input type="text" value="${it.amount ? Number(it.amount).toLocaleString('en-CA') : ''}" placeholder="0" oninput="editBreakdown(${idx},'amount',this.value)" onfocus="fmtFocus(this)" onblur="fmtBlur(this)">
+      </div>
+      <button class="bd-remove" title="Remove line" onclick="removeBreakdown(${idx})">✕</button>
+    </div>`).join('');
+  box.innerHTML = `
+    <div class="bd-list">${rows}</div>
+    <div class="bd-foot">
+      <button class="bd-btn" onclick="addBreakdown()">+ Add line</button>
+      <div class="bd-total">Total build cost: <strong id="bd-total-val">${fmt(breakdownTotal(items))}</strong></div>
+    </div>
+    <button class="bd-clear" onclick="clearBreakdown()">Clear breakdown · back to manual entry</button>`;
+}
+
+function applyBreakdown() {
+  const cfg = model.configurations[model.selectedConfig];
+  const total = breakdownTotal(cfg.buildBreakdown);
+  cfg.buildCost = total;
+  setBuildCostInputs(total);
+  const tv = document.getElementById('bd-total-val');
+  if (tv) tv.textContent = fmt(total);
+  recalc();
+}
+
+function editBreakdown(idx, field, value) {
+  const items = model.configurations[model.selectedConfig].buildBreakdown;
+  if (!items || !items[idx]) return;
+  if (field === 'amount') items[idx].amount = parseFloat(String(value).replace(/[,$\s]/g, '')) || 0;
+  else items[idx].label = value;
+  applyBreakdown();
+}
+
+function addBreakdown() {
+  const cfg = model.configurations[model.selectedConfig];
+  if (!cfg.buildBreakdown) cfg.buildBreakdown = [];
+  cfg.buildBreakdown.push({ label: '', amount: 0 });
+  renderBreakdown();
+  applyBreakdown();
+}
+
+function removeBreakdown(idx) {
+  const cfg = model.configurations[model.selectedConfig];
+  cfg.buildBreakdown.splice(idx, 1);
+  renderBreakdown();
+  applyBreakdown();
+}
+
+function startBreakdown() {
+  model.configurations[model.selectedConfig].buildBreakdown =
+    DEFAULT_BUILD_ITEMS.map(l => ({ label: l, amount: 0 }));
+  renderBreakdown();
+  applyBreakdown();
+}
+
+function clearBreakdown() {
+  const cfg = model.configurations[model.selectedConfig];
+  const keep = cfg.buildCost;
+  cfg.buildBreakdown = [];
+  renderBreakdown();
+  setBuildCostInputs(keep);
+  recalc();
 }
 
 function schedSave() {
