@@ -19,6 +19,22 @@ try {
   }
 } catch { /* no seeds dir — fine */ }
 
+// Site-wide password gate (HTTP Basic Auth). If SITE_PASSWORD is set (Railway),
+// every page and API call requires the shared login. Unset (local dev) = open.
+const SITE_USER = process.env.SITE_USER || 'jct';
+const SITE_PASSWORD = process.env.SITE_PASSWORD;
+if (SITE_PASSWORD) {
+  app.use((req, res, next) => {
+    const [scheme, encoded] = (req.headers.authorization || '').split(' ');
+    if (scheme === 'Basic' && encoded) {
+      const [user, pass] = Buffer.from(encoded, 'base64').toString().split(':');
+      if (user === SITE_USER && pass === SITE_PASSWORD) return next();
+    }
+    res.set('WWW-Authenticate', 'Basic realm="JCT Transition Planner"');
+    return res.status(401).send('Authentication required.');
+  });
+}
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -37,15 +53,8 @@ app.get('/api/:file', (req, res) => {
   }
 });
 
-// Write-lock: if ADMIN_KEY is set (Railway), saves require a matching key.
-// If unset (local dev), writes are open so local editing still works.
-const ADMIN_KEY = process.env.ADMIN_KEY;
-
-// POST /api/:file — write a JSON data file
+// POST /api/:file — write a JSON data file (open to anyone past the site gate)
 app.post('/api/:file', (req, res) => {
-  if (ADMIN_KEY && req.headers['x-admin-key'] !== ADMIN_KEY) {
-    return res.status(403).json({ error: 'View only — editing is locked.' });
-  }
   const name = req.params.file.replace(/[^a-z0-9-]/gi, '');
   const filePath = path.join(DATA_DIR, `${name}.json`);
   try {
