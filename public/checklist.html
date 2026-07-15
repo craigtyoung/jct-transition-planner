@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JCT Transition Planner — Wind-Down Checklist</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="style.css">
+<script src="admin.js"></script>
+<style>
+.cl-item {
+  display: grid;
+  grid-template-columns: 22px 1fr 130px 140px;
+  gap: 10px; align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gray-100);
+  transition: background 0.1s;
+}
+.cl-item:last-child { border-bottom: none; }
+.cl-item:hover { background: var(--gray-50); border-radius: 6px; }
+.cl-item.done .cl-text { text-decoration: line-through; color: var(--gray-300); }
+.cl-text { font-size: 13px; }
+.cl-owner select {
+  font-size: 12px; padding: 4px 6px; border-radius: 5px;
+  border: 1px solid var(--gray-100); background: white;
+  color: var(--gray-700); cursor: pointer; width: 100%;
+}
+.cl-date input[type="date"] {
+  font-size: 12px; padding: 4px 6px; border-radius: 5px;
+  border: 1px solid var(--gray-100); background: white;
+  color: var(--gray-700); width: 100%;
+}
+.cl-header {
+  display: grid;
+  grid-template-columns: 22px 1fr 130px 140px;
+  gap: 10px;
+  padding: 6px 0 10px;
+  font-size: 11px; font-weight: 700; color: var(--gray-500);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  border-bottom: 2px solid var(--gray-100);
+}
+.category-block { margin-bottom: 28px; }
+.category-title {
+  font-size: 12px; font-weight: 800; color: var(--navy);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 2px;
+  display: flex; align-items: center; gap: 10px;
+}
+.cat-progress {
+  font-size: 11px; color: var(--gray-500);
+  background: var(--gray-100); padding: 2px 8px; border-radius: 10px;
+  font-weight: 600;
+}
+.cat-progress.done { background: var(--green-bg); color: var(--green); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">JCT <span>Transition Planner</span></div>
+  <div class="nav-links">
+    <a href="/" class="nav-link">Command Centre</a>
+    <a href="/financial.html" class="nav-link">Financial Model</a>
+    <a href="/savings.html" class="nav-link">Savings Plan</a>
+    <a href="/timeline.html" class="nav-link">Timeline</a>
+    <a href="/checklist.html" class="nav-link active">Wind-Down</a>
+  </div>
+  <div class="nav-save" id="save-indicator">✓ Saved</div>
+</nav>
+
+<div class="main">
+
+  <div class="page-header">
+    <div class="page-title">Wind-Down Checklist</div>
+    <div class="page-subtitle">Operational tasks for closing the current facility cleanly</div>
+  </div>
+
+  <!-- Overall progress -->
+  <div class="card section">
+    <div class="card-row" style="align-items:center">
+      <div>
+        <span style="font-size:28px;font-weight:900;color:var(--navy)" id="total-pct">0%</span>
+        <span style="font-size:14px;color:var(--gray-500);margin-left:8px">complete</span>
+        <div style="font-size:12px;color:var(--gray-500);margin-top:2px" id="total-count">0 of 0 items done</div>
+      </div>
+      <div style="flex:1;margin-left:24px">
+        <div class="progress-track"><div class="progress-fill" id="overall-progress" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checklist sections -->
+  <div class="card" id="checklist-container">
+    <div style="color:var(--gray-300);text-align:center;padding:40px">Loading…</div>
+  </div>
+
+</div>
+
+<div class="footer" id="footer-ts">JCT Transition Planner · Updated —</div>
+
+<script>
+let clData   = {};
+let saveTimer = null;
+
+const OWNERS = ['Craig', 'Victor', 'David', 'Accountant', 'Lawyer'];
+
+async function load() {
+  const res = await fetch('/api/checklist');
+  clData = await res.json();
+  render();
+  const ts = clData.lastUpdated ? new Date(clData.lastUpdated).toLocaleString() : '—';
+  document.getElementById('footer-ts').textContent = `JCT Transition Planner · Last saved: ${ts}`;
+}
+
+function render() {
+  const container = document.getElementById('checklist-container');
+  container.innerHTML = '';
+
+  let totalItems = 0, totalDone = 0;
+
+  (clData.categories || []).forEach(cat => {
+    const done  = cat.items.filter(i => i.checked).length;
+    const total = cat.items.length;
+    totalItems += total;
+    totalDone  += done;
+    const allDone = done === total && total > 0;
+
+    const block = document.createElement('div');
+    block.className = 'category-block';
+
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'category-title';
+    titleDiv.innerHTML = `
+      ${cat.title}
+      <span class="cat-progress ${allDone ? 'done' : ''}">${done}/${total}</span>
+    `;
+    block.appendChild(titleDiv);
+
+    const header = document.createElement('div');
+    header.className = 'cl-header';
+    header.innerHTML = '<span></span><span>Task</span><span>Owner</span><span>Due Date</span>';
+    block.appendChild(header);
+
+    cat.items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'cl-item' + (item.checked ? ' done' : '');
+      row.id = `item-${item.id}`;
+
+      const ownerOpts = OWNERS.map(o =>
+        `<option ${o === item.owner ? 'selected' : ''}>${o}</option>`
+      ).join('');
+
+      row.innerHTML = `
+        <input type="checkbox" ${item.checked ? 'checked' : ''}
+               onchange="onCheck('${cat.id}', '${item.id}', this.checked)">
+        <span class="cl-text">${item.text}</span>
+        <div class="cl-owner">
+          <select onchange="onOwner('${cat.id}', '${item.id}', this.value)">
+            ${ownerOpts}
+          </select>
+        </div>
+        <div class="cl-date">
+          <input type="date" value="${item.dueDate || ''}"
+                 onchange="onDue('${cat.id}', '${item.id}', this.value)">
+        </div>
+      `;
+      block.appendChild(row);
+    });
+
+    container.appendChild(block);
+    // Add divider between categories (not last)
+    if (cat !== (clData.categories || []).at(-1)) {
+      const div = document.createElement('div');
+      div.className = 'divider';
+      container.appendChild(div);
+    }
+  });
+
+  // Update overall progress
+  const pct = totalItems > 0 ? Math.round(totalDone / totalItems * 100) : 0;
+  document.getElementById('total-pct').textContent   = pct + '%';
+  document.getElementById('total-count').textContent = `${totalDone} of ${totalItems} items done`;
+  document.getElementById('overall-progress').style.width = pct + '%';
+}
+
+function getItem(catId, itemId) {
+  const cat = (clData.categories || []).find(c => c.id === catId);
+  return cat ? cat.items.find(i => i.id === itemId) : null;
+}
+
+function onCheck(catId, itemId, val) {
+  const item = getItem(catId, itemId);
+  if (!item) return;
+  item.checked = val;
+  const row = document.getElementById(`item-${itemId}`);
+  if (row) row.classList.toggle('done', val);
+  render();
+  schedSave();
+}
+
+function onOwner(catId, itemId, val) {
+  const item = getItem(catId, itemId);
+  if (item) { item.owner = val; schedSave(); }
+}
+
+function onDue(catId, itemId, val) {
+  const item = getItem(catId, itemId);
+  if (item) { item.dueDate = val; schedSave(); }
+}
+
+function schedSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(save, 900);
+}
+
+async function save() {
+  const res = await fetch('/api/checklist', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(clData)
+  });
+  if (res.ok) {
+    const el = document.getElementById('save-indicator');
+    el.classList.add('visible');
+    setTimeout(() => el.classList.remove('visible'), 2000);
+    const d = await res.json();
+    document.getElementById('footer-ts').textContent =
+      `JCT Transition Planner · Last saved: ${new Date(d.timestamp).toLocaleString()}`;
+  }
+}
+
+load();
+</script>
+</body>
+</html>

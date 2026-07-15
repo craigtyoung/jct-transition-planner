@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JCT Transition Planner — Timeline</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="style.css">
+<script src="admin.js"></script>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">JCT <span>Transition Planner</span></div>
+  <div class="nav-links">
+    <a href="/" class="nav-link">Command Centre</a>
+    <a href="/financial.html" class="nav-link">Financial Model</a>
+    <a href="/savings.html" class="nav-link">Savings Plan</a>
+    <a href="/timeline.html" class="nav-link active">Timeline</a>
+    <a href="/checklist.html" class="nav-link">Wind-Down</a>
+  </div>
+  <div class="nav-save" id="save-indicator">✓ Saved</div>
+</nav>
+
+<div class="main">
+
+  <div class="page-header">
+    <div class="page-title">Transition Timeline</div>
+    <div class="page-subtitle">Two-track visual — click any status badge to cycle: Pending → In Progress → Done → Delayed</div>
+  </div>
+
+  <!-- Progress summary -->
+  <div class="grid-2 gap-20 section">
+    <div class="card">
+      <div class="card-title">Wind-Down Progress</div>
+      <div class="card-row">
+        <div><div class="big-num" id="wd-done">0</div><div class="num-label">Done</div></div>
+        <div><div class="big-num" style="color:var(--blue)" id="wd-inprogress">0</div><div class="num-label">In Progress</div></div>
+        <div><div class="big-num" style="color:var(--red)" id="wd-delayed">0</div><div class="num-label">Delayed</div></div>
+        <div><div class="big-num text-gray" id="wd-pending">10</div><div class="num-label">Pending</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Ramp-Up Progress</div>
+      <div class="card-row">
+        <div><div class="big-num" id="ru-done">0</div><div class="num-label">Done</div></div>
+        <div><div class="big-num" style="color:var(--blue)" id="ru-inprogress">0</div><div class="num-label">In Progress</div></div>
+        <div><div class="big-num" style="color:var(--red)" id="ru-delayed">0</div><div class="num-label">Delayed</div></div>
+        <div><div class="big-num text-gray" id="ru-pending">11</div><div class="num-label">Pending</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two-track timeline -->
+  <div class="timeline-grid">
+
+    <div class="card">
+      <div class="timeline-track-title wind-down">Wind-Down — Current Facility</div>
+      <div id="wd-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="timeline-track-title ramp-up">Ramp-Up — New Facility</div>
+      <div id="ru-list"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<div class="footer" id="footer-ts">JCT Transition Planner · Updated —</div>
+
+<script>
+let milestones = {};
+let saveTimer  = null;
+
+const STATUS_CYCLE = ['Pending', 'In Progress', 'Done', 'Delayed'];
+
+const STATUS_BADGE = {
+  'Pending':     'badge-Pending',
+  'In Progress': 'badge-InProgress',
+  'Done':        'badge-Done',
+  'Delayed':     'badge-Delayed'
+};
+
+async function load() {
+  const res = await fetch('/api/milestones');
+  milestones = await res.json();
+  renderAll();
+  const ts = milestones.lastUpdated ? new Date(milestones.lastUpdated).toLocaleString() : '—';
+  document.getElementById('footer-ts').textContent = `JCT Transition Planner · Last saved: ${ts}`;
+}
+
+function renderAll() {
+  renderTrack('wd', milestones.windDown || []);
+  renderTrack('ru', milestones.rampUp   || []);
+  updateCounts();
+}
+
+function renderTrack(prefix, items) {
+  const container = document.getElementById(`${prefix}-list`);
+  container.innerHTML = '';
+
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'milestone-row';
+    div.innerHTML = `
+      <div class="milestone-date">${fmtDate(item.targetDate)}</div>
+      <div class="milestone-body">
+        <div class="milestone-title">${item.title}</div>
+        <span class="badge ${STATUS_BADGE[item.status] || 'badge-Pending'}"
+              onclick="cycleStatus('${prefix}', '${item.id}')" title="Click to update status">
+          ${item.status}
+        </span>
+        <input class="milestone-notes-input"
+               value="${item.notes || ''}"
+               placeholder="add notes…"
+               oninput="onNotes('${prefix}', '${item.id}', this.value)">
+      </div>
+      <div style="min-width:120px">
+        <input type="date" value="${item.targetDate}"
+               style="border:none;border-bottom:1px solid var(--gray-100);border-radius:0;font-size:11px;color:var(--gray-500);padding:2px 0;background:transparent;font-family:var(--font)"
+               oninput="onDate('${prefix}', '${item.id}', this.value)">
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function cycleStatus(prefix, id) {
+  const track = getTrack(prefix);
+  const item  = track.find(m => m.id === id);
+  if (!item) return;
+  const idx = STATUS_CYCLE.indexOf(item.status);
+  item.status = STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length];
+  renderAll();
+  schedSave();
+}
+
+function onNotes(prefix, id, val) {
+  const item = getTrack(prefix).find(m => m.id === id);
+  if (item) { item.notes = val; schedSave(); }
+}
+
+function onDate(prefix, id, val) {
+  const item = getTrack(prefix).find(m => m.id === id);
+  if (item) { item.targetDate = val; schedSave(); }
+}
+
+function getTrack(prefix) {
+  return prefix === 'wd' ? milestones.windDown : milestones.rampUp;
+}
+
+function updateCounts() {
+  ['wd', 'ru'].forEach(p => {
+    const track = p === 'wd' ? milestones.windDown : milestones.rampUp;
+    const counts = { Done: 0, 'In Progress': 0, Delayed: 0, Pending: 0 };
+    (track || []).forEach(m => { counts[m.status] = (counts[m.status] || 0) + 1; });
+    document.getElementById(`${p}-done`).textContent       = counts['Done'];
+    document.getElementById(`${p}-inprogress`).textContent = counts['In Progress'];
+    document.getElementById(`${p}-delayed`).textContent    = counts['Delayed'];
+    document.getElementById(`${p}-pending`).textContent    = counts['Pending'];
+  });
+}
+
+function fmtDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('en-CA', { month: 'short', year: 'numeric' });
+}
+
+function schedSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(save, 900);
+}
+
+async function save() {
+  const res = await fetch('/api/milestones', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(milestones)
+  });
+  if (res.ok) {
+    const el = document.getElementById('save-indicator');
+    el.classList.add('visible');
+    setTimeout(() => el.classList.remove('visible'), 2000);
+    const d = await res.json();
+    document.getElementById('footer-ts').textContent =
+      `JCT Transition Planner · Last saved: ${new Date(d.timestamp).toLocaleString()}`;
+  }
+}
+
+load();
+</script>
+</body>
+</html>

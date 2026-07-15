@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JCT Transition Planner — Savings Plan</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="style.css">
+<script src="admin.js"></script>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">JCT <span>Transition Planner</span></div>
+  <div class="nav-links">
+    <a href="/" class="nav-link">Command Centre</a>
+    <a href="/financial.html" class="nav-link">Financial Model</a>
+    <a href="/savings.html" class="nav-link active">Savings Plan</a>
+    <a href="/timeline.html" class="nav-link">Timeline</a>
+    <a href="/checklist.html" class="nav-link">Wind-Down</a>
+  </div>
+  <div class="nav-save" id="save-indicator">✓ Saved</div>
+</nav>
+
+<div class="main">
+
+  <div class="page-header">
+    <div class="page-title">Savings Plan</div>
+    <div class="page-subtitle">Capital accumulation from JCT profits — log actuals monthly</div>
+  </div>
+
+  <!-- Summary cards -->
+  <div class="grid-4 section">
+    <div class="card">
+      <div class="card-title">Starting Capital</div>
+      <div class="big-num" id="sum-start">—</div>
+      <div class="num-label">Current on hand</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Projected at April 2028</div>
+      <div class="big-num green" id="sum-apr">—</div>
+      <div class="num-label">Based on actuals + target</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Down Payment Target</div>
+      <div class="big-num" id="sum-target">—</div>
+      <div class="num-label">+ 10% contingency</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Gap / Surplus</div>
+      <div class="big-num" id="sum-gap">—</div>
+      <div class="num-label" id="sum-gap-label">Partner capital needed</div>
+    </div>
+  </div>
+
+  <!-- Settings row -->
+  <div class="card section">
+    <div class="card-title">Settings (synced with Command Centre)</div>
+    <div class="grid-3">
+      <div class="input-group">
+        <label>Starting Capital ($)</label>
+        <div class="input-prefix"><span class="prefix">$</span>
+          <input type="number" id="set-capital" step="1000" oninput="onSettingsChange()">
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Monthly Savings Target ($)</label>
+        <div class="input-prefix"><span class="prefix">$</span>
+          <input type="number" id="set-monthly" step="1000" oninput="onSettingsChange()">
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Down Payment Target ($)</label>
+        <div class="input-prefix"><span class="prefix">$</span>
+          <input type="number" id="set-downpmt" step="10000" oninput="onSettingsChange()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Monthly log -->
+  <div class="card section">
+    <div class="card-title">Monthly Log</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th class="right">Target</th>
+            <th class="right">Actual Saved</th>
+            <th class="right">Variance</th>
+            <th class="right">Running Total</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="log-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer" id="footer-ts">JCT Transition Planner · Updated —</div>
+
+<script>
+let config  = {};
+let logData = {};
+let saveTimerConfig = null;
+let saveTimerLog    = null;
+
+const TODAY_ID = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+
+async function load() {
+  const [cfgRes, logRes] = await Promise.all([
+    fetch('/api/config'),
+    fetch('/api/savings-log')
+  ]);
+  config  = await cfgRes.json();
+  logData = await logRes.json();
+
+  document.getElementById('set-capital').value  = config.currentCapital;
+  document.getElementById('set-monthly').value  = config.monthlySavingsTarget;
+  document.getElementById('set-downpmt').value  = config.downPaymentTarget;
+
+  renderTable();
+  updateSummary();
+
+  const ts = logData.lastUpdated ? new Date(logData.lastUpdated).toLocaleString() : '—';
+  document.getElementById('footer-ts').textContent = `JCT Transition Planner · Last saved: ${ts}`;
+}
+
+function renderTable() {
+  const tbody = document.getElementById('log-tbody');
+  tbody.innerHTML = '';
+
+  let running = Number(config.currentCapital) || 0;
+
+  (logData.entries || []).forEach(entry => {
+    const isToday   = entry.id === TODAY_ID;
+    const hasPast   = entry.id <= TODAY_ID;
+    const actual    = entry.actualSavings;
+    const target    = entry.targetSavings || 0;
+    const variance  = actual !== null ? actual - target : null;
+
+    // Running total: use actual if entered, else target for past months, target for future
+    const contribution = actual !== null ? actual : (hasPast ? 0 : target);
+    if (actual !== null || !hasPast) running += (actual !== null ? actual : target);
+
+    // The running total at END of this month
+    const runningAfter = Number(config.currentCapital) || 0; // recalculated below
+
+    const tr = document.createElement('tr');
+    if (isToday) tr.className = 'month-current';
+
+    tr.innerHTML = `
+      <td style="white-space:nowrap;font-weight:${isToday ? '700' : '400'}">${entry.label}${isToday ? ' ◀' : ''}</td>
+      <td class="right text-gray">$${target.toLocaleString('en-CA')}</td>
+      <td class="right">
+        <input type="number" class="savings-input" data-id="${entry.id}"
+          value="${actual !== null ? actual : ''}"
+          placeholder="—"
+          oninput="onActualChange('${entry.id}', this.value)"
+          style="width:110px">
+      </td>
+      <td class="right ${variance === null ? 'text-gray' : variance >= 0 ? 'text-green' : 'text-red'}"
+          id="var-${entry.id}">
+        ${variance === null ? '—' : (variance >= 0 ? '+' : '') + '$' + Math.abs(variance).toLocaleString('en-CA')}
+      </td>
+      <td class="right fw-bold" id="run-${entry.id}">—</td>
+      <td><input type="text" data-notes="${entry.id}"
+          value="${entry.notes || ''}"
+          placeholder="notes…"
+          oninput="onNotesChange('${entry.id}', this.value)"
+          style="border:none;border-bottom:1px solid var(--gray-100);border-radius:0;font-size:12px;padding:4px 0;background:transparent"></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Now calculate running totals properly
+  let run = Number(config.currentCapital) || 0;
+  (logData.entries || []).forEach(entry => {
+    const actual = entry.actualSavings;
+    const target = entry.targetSavings || 0;
+    const isPast = entry.id <= TODAY_ID;
+
+    if (actual !== null) {
+      run += actual;
+    } else if (!isPast) {
+      run += target;
+    }
+    // If past and no actual: skip (don't add, show gap)
+    const el = document.getElementById(`run-${entry.id}`);
+    if (el) {
+      if (actual !== null || !isPast) {
+        el.textContent = '$' + Math.round(run).toLocaleString('en-CA');
+      } else {
+        el.textContent = '—';
+        el.className = 'right text-gray';
+      }
+    }
+  });
+}
+
+function updateSummary() {
+  const capital   = Number(config.currentCapital)      || 0;
+  const monthly   = Number(config.monthlySavingsTarget) || 0;
+  const downPmt   = Number(config.downPaymentTarget)   || 750000;
+  const totalTarget = downPmt + 250000; // + 10% contingency on $2.5M default build
+
+  // Projected April 2028: sum of actuals + target for remaining months
+  let projected = capital;
+  const apr2028id = '2028-04';
+  (logData.entries || []).forEach(entry => {
+    if (entry.id > apr2028id) return;
+    if (entry.actualSavings !== null) {
+      projected += entry.actualSavings;
+    } else {
+      projected += entry.targetSavings || monthly;
+    }
+  });
+
+  const gap = projected - totalTarget;
+
+  document.getElementById('sum-start').textContent  = fmt(capital);
+  document.getElementById('sum-apr').textContent    = fmt(projected);
+  document.getElementById('sum-target').textContent = fmt(totalTarget);
+
+  const gapEl   = document.getElementById('sum-gap');
+  const gapLbl  = document.getElementById('sum-gap-label');
+  gapEl.textContent = (gap >= 0 ? '+' : '') + fmt(gap);
+  gapEl.className   = 'big-num ' + (gap >= 0 ? 'green' : 'red');
+  gapLbl.textContent = gap >= 0 ? 'Surplus — no outside capital needed' : 'Partner capital needed';
+}
+
+function onActualChange(id, val) {
+  const entry = (logData.entries || []).find(e => e.id === id);
+  if (!entry) return;
+  entry.actualSavings = val === '' ? null : Number(val);
+  renderTable();
+  updateSummary();
+  schedSaveLog();
+}
+
+function onNotesChange(id, val) {
+  const entry = (logData.entries || []).find(e => e.id === id);
+  if (!entry) return;
+  entry.notes = val;
+  schedSaveLog();
+}
+
+function onSettingsChange() {
+  config.currentCapital       = Number(document.getElementById('set-capital').value)  || 0;
+  config.monthlySavingsTarget  = Number(document.getElementById('set-monthly').value) || 0;
+  config.downPaymentTarget    = Number(document.getElementById('set-downpmt').value)  || 750000;
+  renderTable();
+  updateSummary();
+  schedSaveConfig();
+}
+
+function schedSaveConfig() {
+  clearTimeout(saveTimerConfig);
+  saveTimerConfig = setTimeout(() => saveEndpoint('config', config), 900);
+}
+
+function schedSaveLog() {
+  clearTimeout(saveTimerLog);
+  saveTimerLog = setTimeout(() => saveEndpoint('savings-log', logData), 900);
+}
+
+async function saveEndpoint(name, data) {
+  const res = await fetch(`/api/${name}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (res.ok) {
+    const el = document.getElementById('save-indicator');
+    el.classList.add('visible');
+    setTimeout(() => el.classList.remove('visible'), 2000);
+    const d = await res.json();
+    document.getElementById('footer-ts').textContent =
+      `JCT Transition Planner · Last saved: ${new Date(d.timestamp).toLocaleString()}`;
+  }
+}
+
+function fmt(n) {
+  return '$' + Math.abs(Math.round(n)).toLocaleString('en-CA');
+}
+
+load();
+</script>
+</body>
+</html>

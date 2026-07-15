@@ -1,0 +1,15 @@
+{
+  "leaseHardEnd": "2028-04-30",
+  "leaseStretchEnd": "2028-08-31",
+  "newFacilityOpen": "2028-09-01",
+  "downPaymentTarget": 750000,
+  "currentCapital": 400000,
+  "monthlySavingsTarget": 20000,
+  "statusPills": {
+    "sublease": "Not received",
+    "financing": "In discussion",
+    "structure": "Pending",
+    "construction": "Complete"
+  },
+  "lastUpdated": "2026-06-16T20:28:52.776Z"
+}

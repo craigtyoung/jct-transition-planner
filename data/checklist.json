@@ -1,0 +1,58 @@
+{
+  "categories": [
+    {
+      "id": "member-comm",
+      "title": "Member Communication",
+      "items": [
+        { "id": "mc-1", "text": "Draft 'future of JCT' letter (early notice — 18 months out)", "checked": false, "owner": "Craig",      "dueDate": "2026-10-01", "notes": "" },
+        { "id": "mc-2", "text": "Announce new location + timeline (12 months out)",             "checked": false, "owner": "Craig",      "dueDate": "2027-04-01", "notes": "" },
+        { "id": "mc-3", "text": "Final season communication (3 months out)",                    "checked": false, "owner": "Craig",      "dueDate": "2028-01-01", "notes": "" },
+        { "id": "mc-4", "text": "New facility pre-registration campaign",                       "checked": false, "owner": "Craig",      "dueDate": "2028-02-01", "notes": "" }
+      ]
+    },
+    {
+      "id": "staff",
+      "title": "Staff",
+      "items": [
+        { "id": "st-1", "text": "Identify which pros / staff will transfer to new facility",   "checked": false, "owner": "Craig",      "dueDate": "2027-10-01", "notes": "" },
+        { "id": "st-2", "text": "Employment agreements for new facility",                       "checked": false, "owner": "Craig",      "dueDate": "2028-02-01", "notes": "" },
+        { "id": "st-3", "text": "Severance / transition plan for staff not transferring",       "checked": false, "owner": "Craig",      "dueDate": "2028-03-01", "notes": "" },
+        { "id": "st-4", "text": "Victor: Vietnam licensing vs. new site alignment conversation","checked": false, "owner": "Craig",      "dueDate": "2026-09-01", "notes": "" }
+      ]
+    },
+    {
+      "id": "equipment",
+      "title": "Equipment & Assets",
+      "items": [
+        { "id": "eq-1", "text": "Full equipment inventory",                                     "checked": false, "owner": "Craig",      "dueDate": "2027-06-01", "notes": "" },
+        { "id": "eq-2", "text": "Court equipment (nets, posts, ball machines): transfer or sell","checked": false, "owner": "Craig",      "dueDate": "2028-02-01", "notes": "" },
+        { "id": "eq-3", "text": "Bubble / dome: owned or leased? Disposition decision",        "checked": false, "owner": "Craig",      "dueDate": "2027-01-01", "notes": "" },
+        { "id": "eq-4", "text": "Pro shop inventory disposition",                               "checked": false, "owner": "Craig",      "dueDate": "2028-03-01", "notes": "" },
+        { "id": "eq-5", "text": "Furniture / fixtures: transfer vs. sell",                     "checked": false, "owner": "Craig",      "dueDate": "2028-03-01", "notes": "" },
+        { "id": "eq-6", "text": "IT / systems: membership software migration plan",             "checked": false, "owner": "Craig",      "dueDate": "2027-12-01", "notes": "" }
+      ]
+    },
+    {
+      "id": "lease-exit",
+      "title": "Lease Exit",
+      "items": [
+        { "id": "le-1", "text": "Confirm lease exit obligations with lawyer",                   "checked": false, "owner": "Lawyer",     "dueDate": "2026-10-01", "notes": "" },
+        { "id": "le-2", "text": "Site restoration requirements (if any)",                      "checked": false, "owner": "Lawyer",     "dueDate": "2027-01-01", "notes": "" },
+        { "id": "le-3", "text": "Final lease payment date confirmed",                          "checked": false, "owner": "Craig",      "dueDate": "2027-10-01", "notes": "" },
+        { "id": "le-4", "text": "Keys / access handover process",                             "checked": false, "owner": "Craig",      "dueDate": "2028-04-01", "notes": "" }
+      ]
+    },
+    {
+      "id": "financial",
+      "title": "Financial",
+      "items": [
+        { "id": "fi-1", "text": "Set up new entity financials for new facility",               "checked": false, "owner": "Craig",      "dueDate": "2027-06-01", "notes": "" },
+        { "id": "fi-2", "text": "Tax implications of transition (consult accountant)",         "checked": false, "owner": "Accountant", "dueDate": "2027-01-01", "notes": "" },
+        { "id": "fi-3", "text": "HST / payroll transition to new entity (if applicable)",     "checked": false, "owner": "Accountant", "dueDate": "2028-03-01", "notes": "" },
+        { "id": "fi-4", "text": "Final year P&L at current site",                             "checked": false, "owner": "Craig",      "dueDate": "2028-06-01", "notes": "" },
+        { "id": "fi-5", "text": "Close current facility bank accounts",                        "checked": false, "owner": "Craig",      "dueDate": "2028-05-01", "notes": "" }
+      ]
+    }
+  ],
+  "lastUpdated": "2026-06-15T00:00:00.000Z"
+}

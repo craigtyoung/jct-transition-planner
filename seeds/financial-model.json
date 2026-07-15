@@ -1,0 +1,52 @@
+{
+  "currentSite": {
+    "annualRevenue": 2500000,
+    "operatingCosts": 1920000,
+    "annualLease": 180000
+  },
+  "newSite": {
+    "buildCost": 2800000,
+    "downPayment": 750000,
+    "interestRate": 6.5,
+    "loanTermYears": 20,
+    "revenueGrowth": 5,
+    "opCostGrowth": 2,
+    "annualLandSublease": 100000,
+    "maintenanceSavings": 25000
+  },
+  "selectedConfig": "B",
+  "configurations": {
+    "A": {
+      "label": "6 Tennis Courts",
+      "revenue": 2500000,
+      "operatingCosts": 1920000,
+      "buildCost": 2500000
+    },
+    "B": {
+      "label": "6 Tennis + 2 Pickleball",
+      "revenue": 2880000,
+      "operatingCosts": 2050000,
+      "buildCost": 2800000
+    },
+    "C": {
+      "label": "6 Tennis + 4 Pickleball",
+      "revenue": 3200000,
+      "operatingCosts": 2270000,
+      "buildCost": 3000000
+    },
+    "D": {
+      "label": "8 Tennis + 4 Pickleball",
+      "revenue": 4000000,
+      "operatingCosts": 2800000,
+      "buildCost": 3500000
+    }
+  },
+  "partnerEquity": {
+    "partnerCapital": 0,
+    "structure": "Preferred Return + Equity Split",
+    "preferredReturn": 8,
+    "craigEquity": 70,
+    "partnerEquity": 30
+  },
+  "lastUpdated": "2026-06-17T01:46:46.228Z"
+}

@@ -1,0 +1,28 @@
+{
+  "windDown": [
+    { "id": "wd-1",  "title": "Get sublease terms from Jim",            "targetDate": "2026-09-01", "status": "Pending",     "notes": "" },
+    { "id": "wd-2",  "title": "Financing approved",                      "targetDate": "2026-11-01", "status": "Pending",     "notes": "" },
+    { "id": "wd-3",  "title": "Structure / facility decision locked",    "targetDate": "2026-12-01", "status": "Pending",     "notes": "" },
+    { "id": "wd-4",  "title": "Member communication — early notice",     "targetDate": "2027-01-01", "status": "Pending",     "notes": "" },
+    { "id": "wd-5",  "title": "Construction starts at new site",         "targetDate": "2027-02-01", "status": "Pending",     "notes": "" },
+    { "id": "wd-6",  "title": "Staff decisions — who transfers",         "targetDate": "2027-10-01", "status": "Pending",     "notes": "" },
+    { "id": "wd-7",  "title": "Member communication — final notice",     "targetDate": "2028-01-01", "status": "Pending",     "notes": "" },
+    { "id": "wd-8",  "title": "Equipment inventory + disposition",       "targetDate": "2028-02-01", "status": "Pending",     "notes": "" },
+    { "id": "wd-9",  "title": "Bubble/dome disposition",                 "targetDate": "2028-02-01", "status": "Pending",     "notes": "" },
+    { "id": "wd-10", "title": "Final day at current facility",           "targetDate": "2028-04-30", "status": "Pending",     "notes": "" }
+  ],
+  "rampUp": [
+    { "id": "ru-1",  "title": "Sublease signed",                         "targetDate": "2026-10-01", "status": "Pending",     "notes": "" },
+    { "id": "ru-2",  "title": "Financing closed",                        "targetDate": "2026-12-01", "status": "Pending",     "notes": "" },
+    { "id": "ru-3",  "title": "Architect / structure company engaged",   "targetDate": "2027-01-01", "status": "Pending",     "notes": "" },
+    { "id": "ru-4",  "title": "Permits submitted",                       "targetDate": "2027-03-01", "status": "Pending",     "notes": "" },
+    { "id": "ru-5",  "title": "Construction start",                      "targetDate": "2027-04-01", "status": "Pending",     "notes": "" },
+    { "id": "ru-6",  "title": "Courts poured / surfaces laid",           "targetDate": "2027-08-01", "status": "Pending",     "notes": "" },
+    { "id": "ru-7",  "title": "Structure erected",                       "targetDate": "2027-10-01", "status": "Pending",     "notes": "" },
+    { "id": "ru-8",  "title": "Fit-out (lighting, HVAC, clubhouse)",    "targetDate": "2028-01-01", "status": "Pending",     "notes": "" },
+    { "id": "ru-9",  "title": "Staff hired / relocated",                 "targetDate": "2028-06-01", "status": "Pending",     "notes": "" },
+    { "id": "ru-10", "title": "Soft open / testing",                     "targetDate": "2028-08-01", "status": "Pending",     "notes": "" },
+    { "id": "ru-11", "title": "Grand opening",                           "targetDate": "2028-09-01", "status": "Pending",     "notes": "" }
+  ],
+  "lastUpdated": "2026-06-15T00:00:00.000Z"
+}

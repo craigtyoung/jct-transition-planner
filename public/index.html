@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JCT Transition Planner — Command Centre</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="style.css">
+<script src="admin.js"></script>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">JCT <span>Transition Planner</span></div>
+  <div class="nav-links">
+    <a href="/" class="nav-link active">Command Centre</a>
+    <a href="/financial.html" class="nav-link">Financial Model</a>
+    <a href="/savings.html" class="nav-link">Savings Plan</a>
+    <a href="/timeline.html" class="nav-link">Timeline</a>
+    <a href="/checklist.html" class="nav-link">Wind-Down</a>
+  </div>
+  <div class="nav-save" id="save-indicator">✓ Saved</div>
+</nav>
+
+<div class="main">
+
+  <div class="page-header">
+    <div class="page-title">Command Centre</div>
+    <div class="page-subtitle">JCT → New Site — All critical numbers at a glance</div>
+  </div>
+
+  <!-- Countdowns -->
+  <div class="grid-2 gap-20 section">
+    <div class="countdown-tile">
+      <div class="countdown-number" id="days-lease">—</div>
+      <div class="countdown-label" id="lease-label">Days until current lease ends</div>
+      <div class="countdown-sub" id="lease-date-sub">April 30, 2028 (hard end)</div>
+      <button class="countdown-toggle" id="toggle-lease" onclick="toggleLeaseDate()">
+        Show stretch end (Aug 31, 2028)
+      </button>
+    </div>
+    <div class="countdown-tile">
+      <div class="countdown-number green" id="days-new">—</div>
+      <div class="countdown-label">Days until new facility opens</div>
+      <div class="countdown-sub">September 1, 2028 (target)</div>
+    </div>
+  </div>
+
+  <!-- Capital Progress -->
+  <div class="card section">
+    <div class="card-title">Capital Accumulation</div>
+    <div class="grid-3 gap-20" style="margin-bottom:20px">
+      <div>
+        <div class="big-num" id="display-current-capital">$600,000</div>
+        <div class="num-label">Capital on hand</div>
+      </div>
+      <div>
+        <div class="big-num green" id="display-projected-apr">—</div>
+        <div class="num-label">Projected at April 2028</div>
+      </div>
+      <div>
+        <div class="big-num" id="display-target">$1,000,000</div>
+        <div class="num-label">Target (down payment + contingency)</div>
+      </div>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+    <div class="progress-meta">
+      <span id="progress-pct-label">0% of target on hand</span>
+      <span id="progress-projected-label"></span>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Editable settings -->
+    <div class="grid-3">
+      <div class="input-group">
+        <label>Current Capital ($)</label>
+        <div class="input-prefix"><span class="prefix">$</span>
+          <input type="number" id="input-capital" min="0" step="1000" oninput="onConfigChange()">
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Monthly Savings Target ($)</label>
+        <div class="input-prefix"><span class="prefix">$</span>
+          <input type="number" id="input-monthly" min="0" step="1000" oninput="onConfigChange()">
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Down Payment Target ($)</label>
+        <div class="input-prefix"><span class="prefix">$</span>
+          <input type="number" id="input-downpayment" min="0" step="10000" oninput="onConfigChange()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Pills -->
+  <div class="card section">
+    <div class="card-title">Status Tracker — click to update</div>
+    <div class="pills-grid">
+      <div class="pill-item" onclick="cyclePill('sublease')">
+        <span class="pill-key">Sublease Terms</span>
+        <span class="pill-val" id="pill-sublease">Not received</span>
+      </div>
+      <div class="pill-item" onclick="cyclePill('financing')">
+        <span class="pill-key">Financing</span>
+        <span class="pill-val" id="pill-financing">Not started</span>
+      </div>
+      <div class="pill-item" onclick="cyclePill('structure')">
+        <span class="pill-key">Structure Decision</span>
+        <span class="pill-val" id="pill-structure">Pending</span>
+      </div>
+      <div class="pill-item" onclick="cyclePill('construction')">
+        <span class="pill-key">Construction</span>
+        <span class="pill-val" id="pill-construction">Not started</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Summary -->
+  <div class="card section">
+    <div class="card-title">Key Numbers</div>
+    <div class="grid-4">
+      <div>
+        <div class="big-num">$2.5M</div>
+        <div class="num-label">Current annual revenue</div>
+      </div>
+      <div>
+        <div class="big-num green">$400K</div>
+        <div class="num-label">Current net profit / year</div>
+      </div>
+      <div>
+        <div class="big-num">$591K</div>
+        <div class="num-label">New site net profit (6T+4PB, Year 1)</div>
+      </div>
+      <div>
+        <div class="big-num green">$855K</div>
+        <div class="num-label">New site net profit (Year 21, debt-free)</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer" id="footer-ts">JCT Transition Planner · Updated —</div>
+
+<script>
+let config = {};
+let useStretch = false;
+let saveTimer = null;
+
+const PILL_STATES = {
+  sublease:     ['Not received', 'Received',    'Signed'],
+  financing:    ['Not started',  'In discussion','Approved'],
+  structure:    ['Pending',      'Decided'],
+  construction: ['Not started',  'Underway',     'Complete']
+};
+
+const PILL_COLORS = {
+  'Not received': 'gray', 'Not started': 'gray', 'Pending': 'gray',
+  'Received': 'blue', 'In discussion': 'yellow', 'Underway': 'blue',
+  'Signed': 'green', 'Approved': 'green', 'Decided': 'green', 'Complete': 'green'
+};
+
+async function load() {
+  const res = await fetch('/api/config');
+  config = await res.json();
+
+  document.getElementById('input-capital').value     = config.currentCapital;
+  document.getElementById('input-monthly').value     = config.monthlySavingsTarget;
+  document.getElementById('input-downpayment').value = config.downPaymentTarget;
+
+  updateCountdowns();
+  updateCapital();
+  updatePills();
+
+  const ts = config.lastUpdated ? new Date(config.lastUpdated).toLocaleString() : '—';
+  document.getElementById('footer-ts').textContent = `JCT Transition Planner · Last saved: ${ts}`;
+
+  // Refresh countdowns every minute
+  setInterval(updateCountdowns, 60000);
+}
+
+function updateCountdowns() {
+  const now = new Date();
+  const hardEnd    = new Date('2028-04-30');
+  const stretchEnd = new Date('2028-08-31');
+  const newOpen    = new Date('2028-09-01');
+
+  const leaseTarget = useStretch ? stretchEnd : hardEnd;
+  const daysLease = Math.max(0, Math.ceil((leaseTarget - now) / 86400000));
+  const daysNew   = Math.max(0, Math.ceil((newOpen - now)    / 86400000));
+
+  document.getElementById('days-lease').textContent = daysLease.toLocaleString();
+  document.getElementById('days-new').textContent   = daysNew.toLocaleString();
+  document.getElementById('lease-date-sub').textContent =
+    useStretch ? 'August 31, 2028 (stretch end)' : 'April 30, 2028 (hard end)';
+  document.getElementById('toggle-lease').textContent =
+    useStretch ? 'Show hard end (Apr 30, 2028)' : 'Show stretch end (Aug 31, 2028)';
+}
+
+function toggleLeaseDate() {
+  useStretch = !useStretch;
+  updateCountdowns();
+}
+
+function updateCapital() {
+  const capital   = Number(config.currentCapital)       || 0;
+  const monthly   = Number(config.monthlySavingsTarget)  || 0;
+  const downPmt   = Number(config.downPaymentTarget)     || 750000;
+  const buildCost = 2500000; // default — financial page has the editable version
+  const contingency = buildCost * 0.10;
+  const totalTarget = downPmt + contingency;
+
+  // Months from today to April 30, 2028
+  const now = new Date();
+  const apr2028 = new Date('2028-04-30');
+  const monthsToApr = Math.max(0,
+    (apr2028.getFullYear() - now.getFullYear()) * 12 +
+    (apr2028.getMonth()   - now.getMonth())
+  );
+
+  const projectedApr = capital + monthly * monthsToApr;
+  const pct = Math.min(100, Math.round(capital / totalTarget * 100));
+  const projPct = Math.min(100, Math.round(projectedApr / totalTarget * 100));
+
+  document.getElementById('display-current-capital').textContent = fmt(capital);
+  document.getElementById('display-projected-apr').textContent   = fmt(projectedApr);
+  document.getElementById('display-target').textContent          = fmt(totalTarget);
+  document.getElementById('progress-fill').style.width           = pct + '%';
+  document.getElementById('progress-fill').className             = 'progress-fill' + (pct >= 100 ? ' over' : '');
+  document.getElementById('progress-pct-label').textContent      = `${pct}% of target on hand now`;
+  document.getElementById('progress-projected-label').textContent = `${projPct}% projected by April 2028`;
+}
+
+function updatePills() {
+  const pills = config.statusPills || {};
+  Object.keys(pills).forEach(key => {
+    const val = pills[key];
+    const el  = document.getElementById(`pill-${key}`);
+    if (!el) return;
+    const color = PILL_COLORS[val] || 'gray';
+    el.textContent  = val;
+    el.className    = `pill-val pill-${color}`;
+  });
+}
+
+function cyclePill(key) {
+  const states  = PILL_STATES[key] || [];
+  const current = (config.statusPills || {})[key] || states[0];
+  const idx     = (states.indexOf(current) + 1) % states.length;
+  if (!config.statusPills) config.statusPills = {};
+  config.statusPills[key] = states[idx];
+  updatePills();
+  schedSave();
+}
+
+function onConfigChange() {
+  config.currentCapital      = Number(document.getElementById('input-capital').value)      || 0;
+  config.monthlySavingsTarget = Number(document.getElementById('input-monthly').value)     || 0;
+  config.downPaymentTarget    = Number(document.getElementById('input-downpayment').value) || 750000;
+  updateCapital();
+  schedSave();
+}
+
+function schedSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(save, 900);
+}
+
+async function save() {
+  const res = await fetch('/api/config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config)
+  });
+  if (res.ok) {
+    const el = document.getElementById('save-indicator');
+    el.classList.add('visible');
+    setTimeout(() => el.classList.remove('visible'), 2000);
+    const data = await res.json();
+    document.getElementById('footer-ts').textContent =
+      `JCT Transition Planner · Last saved: ${new Date(data.timestamp).toLocaleString()}`;
+  }
+}
+
+function fmt(n) {
+  return '$' + Math.round(n).toLocaleString('en-CA');
+}
+
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JCT Transition Planner — Financial Model</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="style.css">
+<script src="admin.js"></script>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">JCT <span>Transition Planner</span></div>
+  <div class="nav-links">
+    <a href="/" class="nav-link">Command Centre</a>
+    <a href="/financial.html" class="nav-link active">Financial Model</a>
+    <a href="/savings.html" class="nav-link">Savings Plan</a>
+    <a href="/timeline.html" class="nav-link">Timeline</a>
+    <a href="/checklist.html" class="nav-link">Wind-Down</a>
+  </div>
+  <div class="nav-save" id="save-indicator">✓ Saved</div>
+</nav>
+
+<div class="main">
+
+  <div class="page-header">
+    <div class="page-title">Financial Model</div>
+    <div class="page-subtitle">Interactive pro forma — all inputs editable, calculations update in real time</div>
+  </div>
+
+  <!-- Court Configuration Selector -->
+  <div class="card section">
+    <div class="card-title">Court Configuration</div>
+    <div class="config-tabs" id="config-tabs">
+      <button class="config-tab" data-key="A" onclick="selectConfig('A')">6 Tennis Courts</button>
+      <button class="config-tab" data-key="B" onclick="selectConfig('B')">6T + 2 Pickleball</button>
+      <button class="config-tab active" data-key="C" onclick="selectConfig('C')">6T + 4 Pickleball ★</button>
+      <button class="config-tab" data-key="D" onclick="selectConfig('D')">8T + 4 Pickleball</button>
+    </div>
+
+    <div class="grid-3 gap-20">
+      <div class="input-group">
+        <label>Revenue for Selected Config ($)</label>
+        <div class="input-prefix"><span class="prefix">$</span>
+          <input type="text" id="cfg-revenue" oninput="onConfigValueChange()" onfocus="fmtFocus(this)" onblur="fmtBlur(this,onConfigValueChange)">
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Operating Costs for Selected Config ($)</label>
+        <div class="input-prefix"><span class="prefix">$</span>
+          <input type="text" id="cfg-opcosts" oninput="onConfigValueChange()" onfocus="fmtFocus(this)" onblur="fmtBlur(this,onConfigValueChange)">
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Build Cost for Selected Config ($)</label>
+        <div class="input-prefix"><span class="prefix">$</span>
+          <input type="text" id="cfg-buildcost" oninput="onConfigValueChange()" onfocus="fmtFocus(this)" onblur="fmtBlur(this,onConfigValueChange)">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2 gap-20 section">
+
+    <!-- Left: Inputs -->
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">Current Site</div>
+        <div class="input-group">
+          <label>Annual Revenue ($)</label>
+          <div class="input-prefix"><span class="prefix">$</span>
+            <input type="text" id="cur-revenue" oninput="recalc()" onfocus="fmtFocus(this)" onblur="fmtBlur(this,recalc)">
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Operating Costs ($)</label>
+          <div class="input-prefix"><span class="prefix">$</span>
+            <input type="text" id="cur-opcosts" oninput="recalc()" onfocus="fmtFocus(this)" onblur="fmtBlur(this,recalc)">
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Annual Lease ($)</label>
+          <div class="input-prefix"><span class="prefix">$</span>
+            <input type="text" id="cur-lease" oninput="recalc()" onfocus="fmtFocus(this)" onblur="fmtBlur(this,recalc)">
+          </div>
+        </div>
+        <div style="background:var(--gray-50);padding:12px;border-radius:8px">
+          <span style="font-size:12px;color:var(--gray-500)">Current net profit (auto):</span>
+          <span style="font-size:16px;font-weight:800;color:var(--green);margin-left:8px" id="cur-net">—</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">New Site</div>
+        <div class="input-group">
+          <label>Build Cost ($)</label>
+          <div class="input-prefix"><span class="prefix">$</span>
+            <input type="text" id="new-buildcost" oninput="onBuildCostChange()" onfocus="fmtFocus(this)" onblur="fmtBlur(this,onBuildCostChange)">
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Down Payment ($)</label>
+          <div class="input-prefix"><span class="prefix">$</span>
+            <input type="text" id="new-downpmt" oninput="recalc()" onfocus="fmtFocus(this)" onblur="fmtBlur(this,recalc)">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="input-group">
+            <label>Interest Rate (%)</label>
+            <div class="input-suffix">
+              <input type="number" id="new-rate" step="0.1" min="0" max="20" oninput="recalc()">
+              <span class="suffix">%</span>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>Loan Term (years)</label>
+            <input type="number" id="new-term" step="1" min="5" max="30" oninput="recalc()">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="input-group">
+            <label>Annual Revenue Growth (%)</label>
+            <div class="input-suffix">
+              <input type="number" id="new-growth" step="0.5" min="0" max="20" value="0" oninput="recalc()">
+              <span class="suffix">%</span>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>Annual OpCost Growth (%)</label>
+            <div class="input-suffix">
+              <input type="number" id="new-opgrowth" step="0.5" min="0" max="20" value="0" oninput="recalc()">
+              <span class="suffix">%</span>
+            </div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Annual Land Sublease ($)</label>
+          <div class="input-prefix"><span class="prefix">$</span>
+            <input type="text" id="new-sublease" oninput="recalc()" onfocus="fmtFocus(this)" onblur="fmtBlur(this,recalc)">
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Annual Maintenance Savings vs Current ($)</label>
+          <div class="input-prefix"><span class="prefix">$</span>
+            <input type="text" id="new-maintsav" oninput="recalc()" onfocus="fmtFocus(this)" onblur="fmtBlur(this,recalc)">
+          </div>
+        </div>
+        <div style="background:var(--gray-50);padding:12px;border-radius:8px">
+          <span style="font-size:12px;color:var(--gray-500)">Loan amount (auto):</span>
+          <span style="font-size:14px;font-weight:700;color:var(--navy);margin-left:8px" id="loan-amount">—</span>
+          &nbsp;&nbsp;
+          <span style="font-size:12px;color:var(--gray-500)">Annual debt service:</span>
+          <span style="font-size:14px;font-weight:700;color:var(--red);margin-left:8px" id="debt-service">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Results -->
+    <div class="card">
+      <div class="card-title">Pro Forma — <span id="config-label-display">6T + 4 Pickleball</span></div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th class="right">Year 1</th>
+              <th class="right">Year 5</th>
+              <th class="right">Year 10</th>
+              <th class="right">Year 20</th>
+              <th class="right">Year 21 ★</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="fw-bold">Revenue</td>
+              <td class="right" id="r-rev-1">—</td><td class="right" id="r-rev-5">—</td>
+              <td class="right" id="r-rev-10">—</td><td class="right" id="r-rev-20">—</td>
+              <td class="right" id="r-rev-21">—</td>
+            </tr>
+            <tr><td class="text-gray">Operating costs</td>
+              <td class="right text-gray" id="r-opc-1">—</td><td class="right text-gray" id="r-opc-5">—</td>
+              <td class="right text-gray" id="r-opc-10">—</td><td class="right text-gray" id="r-opc-20">—</td>
+              <td class="right text-gray" id="r-opc-21">—</td>
+            </tr>
+            <tr><td class="text-gray">Debt service</td>
+              <td class="right text-red" id="r-ds-1">—</td><td class="right text-red" id="r-ds-5">—</td>
+              <td class="right text-red" id="r-ds-10">—</td><td class="right text-red" id="r-ds-20">—</td>
+              <td class="right text-green" id="r-ds-21">$0</td>
+            </tr>
+            <tr><td class="text-gray">Land sublease</td>
+              <td class="right text-gray" id="r-sub-1">—</td><td class="right text-gray" id="r-sub-5">—</td>
+              <td class="right text-gray" id="r-sub-10">—</td><td class="right text-gray" id="r-sub-20">—</td>
+              <td class="right text-gray" id="r-sub-21">—</td>
+            </tr>
+            <tr><td class="text-green">Maintenance savings</td>
+              <td class="right text-green" id="r-ms-1">—</td><td class="right text-green" id="r-ms-5">—</td>
+              <td class="right text-green" id="r-ms-10">—</td><td class="right text-green" id="r-ms-20">—</td>
+              <td class="right text-green" id="r-ms-21">—</td>
+            </tr>
+            <tr class="row-total">
+              <td>Net Profit</td>
+              <td class="right" id="r-net-1">—</td><td class="right" id="r-net-5">—</td>
+              <td class="right" id="r-net-10">—</td><td class="right" id="r-net-20">—</td>
+              <td class="right" id="r-net-21">—</td>
+            </tr>
+            <tr><td class="text-gray" style="font-size:11px">Cumulative profit</td>
+              <td class="right text-gray" style="font-size:11px" id="r-cum-1">—</td>
+              <td class="right text-gray" style="font-size:11px" id="r-cum-5">—</td>
+              <td class="right text-gray" style="font-size:11px" id="r-cum-10">—</td>
+              <td class="right text-gray" style="font-size:11px" id="r-cum-20">—</td>
+              <td class="right text-gray" style="font-size:11px" id="r-cum-21">—</td>
+            </tr>
+            <tr class="row-highlight">
+              <td>vs Current ($400K)</td>
+              <td class="right" id="r-vs-1">—</td><td class="right" id="r-vs-5">—</td>
+              <td class="right" id="r-vs-10">—</td><td class="right" id="r-vs-20">—</td>
+              <td class="right" id="r-vs-21">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-16" style="font-size:11px;color:var(--gray-500)">
+        ★ Year 21: loan fully paid. Net profit = revenue − operating costs − land sublease + maintenance savings.
+      </div>
+    </div>
+
+  </div><!-- /grid-2 -->
+
+  <!-- Partner Equity Modeller -->
+  <div class="card section">
+    <div class="collapsible-header" onclick="togglePartner(this)">
+      <div class="card-title" style="margin-bottom:0">Partner Equity Modeller</div>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="collapsible-body" id="partner-body">
+      <div class="grid-2 gap-20" style="margin-bottom:16px">
+        <div>
+          <div class="input-group">
+            <label>Partner Capital Input ($)</label>
+            <div class="input-prefix"><span class="prefix">$</span>
+              <input type="text" id="pe-capital" oninput="recalcPartner()" onfocus="fmtFocus(this)" onblur="fmtBlur(this,recalcPartner)">
+            </div>
+          </div>
+          <div class="input-group">
+            <label>Structure</label>
+            <select id="pe-structure" onchange="recalcPartner()">
+              <option>Preferred Return + Equity Split</option>
+              <option>Straight Debt</option>
+              <option>Revenue Share</option>
+            </select>
+          </div>
+          <div class="grid-2">
+            <div class="input-group">
+              <label>Preferred Return (%)</label>
+              <div class="input-suffix">
+                <input type="number" id="pe-pref" step="0.5" min="0" max="30" oninput="recalcPartner()">
+                <span class="suffix">%</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>Craig's Equity (%)</label>
+              <div class="input-suffix">
+                <input type="number" id="pe-craig-eq" step="5" min="0" max="100" oninput="recalcPartner()">
+                <span class="suffix">%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="background:var(--gray-50);border-radius:10px;padding:20px">
+          <div class="card-title">Year 1 Outputs</div>
+          <table style="font-size:13px">
+            <tr><td style="padding:6px 8px;color:var(--gray-500)">Partner preferred return</td>
+                <td style="padding:6px 8px;font-weight:700;text-align:right" id="pe-out-pref">—</td></tr>
+            <tr><td style="padding:6px 8px;color:var(--gray-500)">Partner equity share (residual)</td>
+                <td style="padding:6px 8px;font-weight:700;text-align:right" id="pe-out-eq">—</td></tr>
+            <tr><td style="padding:6px 8px;font-weight:700">Total partner payout</td>
+                <td style="padding:6px 8px;font-weight:800;color:var(--red);text-align:right" id="pe-out-total">—</td></tr>
+            <tr><td style="padding:6px 8px;font-weight:700;color:var(--green)">Craig's net after partner</td>
+                <td style="padding:6px 8px;font-weight:800;color:var(--green);text-align:right" id="pe-out-craig">—</td></tr>
+            <tr><td style="padding:6px 8px;color:var(--gray-500)">Partner payback period</td>
+                <td style="padding:6px 8px;font-weight:700;text-align:right" id="pe-out-payback">—</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<div class="footer" id="footer-ts">JCT Transition Planner · Updated —</div>
+
+<script>
+let model = {};
+let saveTimer = null;
+
+async function load() {
+  const res = await fetch('/api/financial-model');
+  model = await res.json();
+
+  // Current site
+  document.getElementById('cur-revenue').value = model.currentSite.annualRevenue.toLocaleString('en-CA');
+  document.getElementById('cur-opcosts').value = model.currentSite.operatingCosts.toLocaleString('en-CA');
+  document.getElementById('cur-lease').value   = model.currentSite.annualLease.toLocaleString('en-CA');
+
+  // New site
+  document.getElementById('new-buildcost').value = model.newSite.buildCost.toLocaleString('en-CA');
+  document.getElementById('new-downpmt').value   = model.newSite.downPayment.toLocaleString('en-CA');
+  document.getElementById('new-rate').value      = model.newSite.interestRate;
+  document.getElementById('new-term').value      = model.newSite.loanTermYears;
+  document.getElementById('new-growth').value    = model.newSite.revenueGrowth || 0;
+  document.getElementById('new-opgrowth').value  = model.newSite.opCostGrowth || 0;
+  document.getElementById('new-sublease').value  = model.newSite.annualLandSublease.toLocaleString('en-CA');
+  document.getElementById('new-maintsav').value  = model.newSite.maintenanceSavings.toLocaleString('en-CA');
+
+  // Partner equity
+  const pe = model.partnerEquity;
+  document.getElementById('pe-capital').value   = (pe.partnerCapital || 0).toLocaleString('en-CA');
+  document.getElementById('pe-structure').value = pe.structure;
+  document.getElementById('pe-pref').value      = pe.preferredReturn;
+  document.getElementById('pe-craig-eq').value  = pe.craigEquity;
+
+  selectConfig(model.selectedConfig, false);
+  recalc();
+  updatePartnerInputs();
+
+  const ts = model.lastUpdated ? new Date(model.lastUpdated).toLocaleString() : '—';
+  document.getElementById('footer-ts').textContent = `JCT Transition Planner · Last saved: ${ts}`;
+}
+
+function selectConfig(key, doSave = true) {
+  model.selectedConfig = key;
+  const cfg = model.configurations[key];
+
+  // Update tabs
+  document.querySelectorAll('.config-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.key === key);
+  });
+
+  document.getElementById('cfg-revenue').value   = cfg.revenue.toLocaleString('en-CA');
+  document.getElementById('cfg-opcosts').value   = cfg.operatingCosts.toLocaleString('en-CA');
+  document.getElementById('cfg-buildcost').value = (cfg.buildCost || 0).toLocaleString('en-CA');
+  document.getElementById('new-buildcost').value = (cfg.buildCost || 0).toLocaleString('en-CA');
+  document.getElementById('config-label-display').textContent = cfg.label;
+  recalc();
+  if (doSave) schedSave();
+}
+
+function onConfigValueChange() {
+  const key = model.selectedConfig;
+  model.configurations[key].revenue        = numVal('cfg-revenue');
+  model.configurations[key].operatingCosts = numVal('cfg-opcosts');
+  model.configurations[key].buildCost      = numVal('cfg-buildcost');
+  document.getElementById('new-buildcost').value = numVal('cfg-buildcost').toLocaleString('en-CA');
+  recalc();
+  schedSave();
+}
+
+function onBuildCostChange() {
+  const key = model.selectedConfig;
+  const val = numVal('new-buildcost');
+  model.configurations[key].buildCost = val;
+  document.getElementById('cfg-buildcost').value = val ? val.toLocaleString('en-CA') : '';
+  recalc();
+}
+
+function getInputs() {
+  return {
+    curRevenue:  numVal('cur-revenue'),
+    curOpCosts:  numVal('cur-opcosts'),
+    curLease:    numVal('cur-lease'),
+    buildCost:   numVal('new-buildcost'),
+    downPmt:     numVal('new-downpmt'),
+    rate:        Number(document.getElementById('new-rate').value)    || 0,
+    term:        Number(document.getElementById('new-term').value)    || 20,
+    growth:      parseFloat(document.getElementById('new-growth').value) / 100 || 0,
+    opGrowth:    parseFloat(document.getElementById('new-opgrowth').value) / 100 || 0,
+    sublease:    numVal('new-sublease'),
+    maintSav:    numVal('new-maintsav'),
+  };
+}
+
+function calcDebtService(buildCost, downPmt, rate, termYears) {
+  const principal = Math.max(0, buildCost - downPmt);
+  if (principal <= 0 || rate <= 0) return 0;
+  const r = rate / 100 / 12;
+  const n = termYears * 12;
+  const factor = Math.pow(1 + r, n);
+  const monthly = principal * r * factor / (factor - 1);
+  return monthly * 12;
+}
+
+function recalc() {
+  const v = getInputs();
+  const cfg = model.configurations[model.selectedConfig];
+  const cfgRev  = cfg ? cfg.revenue : 0;
+  const cfgOpc  = cfg ? cfg.operatingCosts : 0;
+
+  const curNet = v.curRevenue - v.curOpCosts - v.curLease;
+  const ds     = calcDebtService(v.buildCost, v.downPmt, v.rate, v.term);
+  const loanAmt = Math.max(0, v.buildCost - v.downPmt);
+
+  // Update displays
+  document.getElementById('cur-net').textContent     = fmt(curNet);
+  document.getElementById('loan-amount').textContent  = fmt(loanAmt);
+  document.getElementById('debt-service').textContent = fmt(ds);
+
+  // Revenue and operating costs at year y with compound growth
+  const g  = v.growth;
+  const og = v.opGrowth;
+  function revAt(y) { return cfgRev * Math.pow(1 + g, y); }
+  function opcAt(y) { return cfgOpc * Math.pow(1 + og, y); }
+
+  // Cumulative profit summed year by year (handles growth + debt payoff correctly)
+  function cumProfit(upTo) {
+    let total = 0;
+    for (let i = 1; i <= upTo; i++) {
+      total += revAt(i) - opcAt(i) - (i <= v.term ? ds : 0) - v.sublease + v.maintSav;
+    }
+    return total;
+  }
+
+  // Year 1 net for partner modeller
+  const net1 = revAt(1) - opcAt(1) - ds - v.sublease + v.maintSav;
+
+  // Table rows
+  const years = [1, 5, 10, 20, 21];
+  years.forEach(y => {
+    const isDebtFree = y === 21;
+    const rev = revAt(y);
+    const opc = opcAt(y);
+    const n   = rev - opc - (isDebtFree ? 0 : ds) - v.sublease + v.maintSav;
+    const cum = cumProfit(y);
+
+    set(`r-rev-${y}`, fmt(rev));
+    set(`r-opc-${y}`, `(${fmt(opc)})`);
+    set(`r-ds-${y}`,  isDebtFree ? '$0' : `(${fmt(ds)})`);
+    set(`r-sub-${y}`, `(${fmt(v.sublease)})`);
+    set(`r-ms-${y}`,  fmt(v.maintSav));
+    const netEl = document.getElementById(`r-net-${y}`);
+    if (netEl) { netEl.textContent = fmt(n); netEl.className = `right ${n >= 0 ? 'text-green' : 'text-red'}`; }
+    set(`r-cum-${y}`, fmt(cum));
+
+    const vs = n - 400000;
+    const vsEl = document.getElementById(`r-vs-${y}`);
+    if (vsEl) {
+      vsEl.textContent = (vs >= 0 ? '+' : '') + fmt(vs);
+      vsEl.className = `right ${vs >= 0 ? 'text-green' : 'text-red'}`;
+    }
+  });
+
+  // Sync model
+  model.currentSite = { annualRevenue: v.curRevenue, operatingCosts: v.curOpCosts, annualLease: v.curLease };
+  model.newSite = { buildCost: v.buildCost, downPayment: v.downPmt, interestRate: v.rate, loanTermYears: v.term, revenueGrowth: g * 100, opCostGrowth: og * 100, annualLandSublease: v.sublease, maintenanceSavings: v.maintSav };
+
+  recalcPartner(net1);
+  schedSave();
+}
+
+function updatePartnerInputs() {
+  recalcPartner();
+}
+
+function recalcPartner(netOverride) {
+  const pe = {
+    capital: numVal('pe-capital'),
+    pref:    Number(document.getElementById('pe-pref').value)     || 0,
+    craigEq: Number(document.getElementById('pe-craig-eq').value) || 70,
+    struct:  document.getElementById('pe-structure').value,
+  };
+
+  const v = getInputs();
+  const cfg = model.configurations[model.selectedConfig];
+  const cfgRev = cfg ? cfg.revenue : 0;
+  const cfgOpc = cfg ? cfg.operatingCosts : 0;
+  const ds  = calcDebtService(v.buildCost, v.downPmt, v.rate, v.term);
+  const net = netOverride !== undefined ? netOverride : cfgRev - cfgOpc - ds - v.sublease + v.maintSav;
+
+  if (pe.capital <= 0) {
+    ['pe-out-pref','pe-out-eq','pe-out-total','pe-out-craig','pe-out-payback'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.textContent = '—';
+    });
+    return;
+  }
+
+  const prefAmt = pe.capital * (pe.pref / 100);
+  const residual = Math.max(0, net - prefAmt);
+  const partnerEq = (100 - pe.craigEq) / 100;
+  const partnerEqShare = residual * partnerEq;
+  const totalPartner = prefAmt + partnerEqShare;
+  const craigNet = net - totalPartner;
+  const paybackYrs = totalPartner > 0 ? (pe.capital / totalPartner).toFixed(1) : '∞';
+
+  set('pe-out-pref',    fmt(prefAmt));
+  set('pe-out-eq',      fmt(partnerEqShare));
+  set('pe-out-total',   fmt(totalPartner));
+  set('pe-out-craig',   fmt(craigNet));
+  set('pe-out-payback', paybackYrs + ' years');
+
+  // Sync model
+  model.partnerEquity = {
+    partnerCapital: pe.capital, structure: pe.struct,
+    preferredReturn: pe.pref, craigEquity: pe.craigEq, partnerEquity: 100 - pe.craigEq
+  };
+}
+
+function togglePartner(header) {
+  header.classList.toggle('open');
+  document.getElementById('partner-body').classList.toggle('open');
+}
+
+function schedSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(save, 900);
+}
+
+async function save() {
+  const res = await fetch('/api/financial-model', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(model)
+  });
+  if (res.ok) {
+    const el = document.getElementById('save-indicator');
+    el.classList.add('visible');
+    setTimeout(() => el.classList.remove('visible'), 2000);
+    const data = await res.json();
+    document.getElementById('footer-ts').textContent =
+      `JCT Transition Planner · Last saved: ${new Date(data.timestamp).toLocaleString()}`;
+  }
+}
+
+function set(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function numVal(id) {
+  return parseFloat(document.getElementById(id).value.replace(/[,$\s]/g, '')) || 0;
+}
+function fmtFocus(el) {
+  const v = parseFloat(el.value.replace(/[,$\s]/g, ''));
+  el.value = v || '';
+}
+function fmtBlur(el, cb) {
+  const v = parseFloat(el.value.replace(/[,$\s]/g, '')) || 0;
+  el.value = v ? v.toLocaleString('en-CA') : '';
+  if (cb) cb();
+}
+
+function fmt(n) {
+  if (n === 0) return '$0';
+  const abs = Math.abs(Math.round(n));
+  const s = '$' + abs.toLocaleString('en-CA');
+  return n < 0 ? `(${s})` : s;
+}
+
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "jct-transition-planner",
+  "version": "1.0.0",
+  "description": "JCT Transition Planner — Wind-down and ramp-up planning tool",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
