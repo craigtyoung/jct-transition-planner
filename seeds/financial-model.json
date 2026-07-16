@@ -39,6 +39,12 @@
       "revenue": 4000000,
       "operatingCosts": 2800000,
       "buildCost": 3500000
+    },
+    "E": {
+      "label": "8 Tennis Courts",
+      "revenue": 3300000,
+      "operatingCosts": 2300000,
+      "buildCost": 2900000
     }
   },
   "partnerEquity": {

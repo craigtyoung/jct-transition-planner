@@ -19,6 +19,24 @@ try {
   }
 } catch { /* no seeds dir — fine */ }
 
+// Merge newly-added court configurations from the seed into existing data.
+// Adds missing config keys ONLY — never overwrites values the user has edited.
+try {
+  const liveFm = path.join(DATA_DIR, 'financial-model.json');
+  const seedFm = path.join(SEED_DIR, 'financial-model.json');
+  if (fs.existsSync(liveFm) && fs.existsSync(seedFm)) {
+    const live = JSON.parse(fs.readFileSync(liveFm, 'utf8'));
+    const seed = JSON.parse(fs.readFileSync(seedFm, 'utf8'));
+    if (seed.configurations && live.configurations) {
+      let changed = false;
+      for (const k of Object.keys(seed.configurations)) {
+        if (!live.configurations[k]) { live.configurations[k] = seed.configurations[k]; changed = true; }
+      }
+      if (changed) fs.writeFileSync(liveFm, JSON.stringify(live, null, 2));
+    }
+  }
+} catch { /* non-fatal */ }
+
 // Site-wide password gate (HTTP Basic Auth). If SITE_PASSWORD is set (Railway),
 // every page and API call requires the shared login. Unset (local dev) = open.
 const SITE_USER = process.env.SITE_USER || 'jct';
