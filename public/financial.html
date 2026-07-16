@@ -74,14 +74,32 @@
       </div>
     </div>
 
-    <!-- Build Cost Breakdown (collapsible, per-config) -->
+    <!-- Itemized Breakdowns (collapsible, per-config): Revenue · Operating Costs · Build Cost -->
     <div class="section" style="margin-top:16px">
-      <div class="collapsible-header" onclick="toggleBreakdown(this)">
-        <div class="card-title" style="margin-bottom:0">Build Cost Breakdown <span id="bd-config-label" style="color:var(--gray-500);font-weight:500;font-size:13px"></span></div>
+      <div class="collapsible-header" onclick="toggleBreakdown('revenue', this)">
+        <div class="card-title" style="margin-bottom:0">Revenue Breakdown <span id="bd-label-revenue" style="color:var(--gray-500);font-weight:500;font-size:13px"></span></div>
         <span class="chevron">▶</span>
       </div>
-      <div class="collapsible-body" id="breakdown-body">
-        <div id="breakdown-content" style="padding-top:14px"></div>
+      <div class="collapsible-body" id="breakdown-body-revenue">
+        <div id="breakdown-content-revenue" style="padding-top:14px"></div>
+      </div>
+    </div>
+    <div class="section" style="margin-top:12px">
+      <div class="collapsible-header" onclick="toggleBreakdown('opcosts', this)">
+        <div class="card-title" style="margin-bottom:0">Operating Cost Breakdown <span id="bd-label-opcosts" style="color:var(--gray-500);font-weight:500;font-size:13px"></span></div>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="collapsible-body" id="breakdown-body-opcosts">
+        <div id="breakdown-content-opcosts" style="padding-top:14px"></div>
+      </div>
+    </div>
+    <div class="section" style="margin-top:12px">
+      <div class="collapsible-header" onclick="toggleBreakdown('build', this)">
+        <div class="card-title" style="margin-bottom:0">Build Cost Breakdown <span id="bd-label-build" style="color:var(--gray-500);font-weight:500;font-size:13px"></span></div>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="collapsible-body" id="breakdown-body-build">
+        <div id="breakdown-content-build" style="padding-top:14px"></div>
       </div>
     </div>
   </div>
@@ -368,7 +386,7 @@ function selectConfig(key, doSave = true) {
   document.getElementById('cfg-buildcost').value = (cfg.buildCost || 0).toLocaleString('en-CA');
   document.getElementById('new-buildcost').value = (cfg.buildCost || 0).toLocaleString('en-CA');
   document.getElementById('config-label-display').textContent = cfg.label;
-  renderBreakdown();
+  renderAllBreakdowns();
   recalc();
   if (doSave) schedSave();
 }
@@ -536,8 +554,22 @@ function togglePartner(header) {
   document.getElementById('partner-body').classList.toggle('open');
 }
 
-// ---- Build Cost Breakdown (per-config, collapsible, opt-in) ----
-const DEFAULT_BUILD_ITEMS = ['Bubble', 'Grade Beam', 'Clubhouse', 'Install', 'Court Surface (Quartz)', 'Nets'];
+// ---- Itemized Breakdowns (per-config, collapsible, opt-in) ----
+// One reusable component drives Revenue, Operating Costs, and Build Cost.
+const BREAKDOWN_KINDS = {
+  revenue: {
+    arr: 'revenueBreakdown', field: 'revenue', inputs: ['cfg-revenue'], noun: 'Revenue',
+    defaults: ['Membership Dues', 'Court Rentals', 'Lessons / Coaching', 'Pickleball Programs', 'Pro Shop / Retail', 'Café / F&B', 'Events & Tournaments']
+  },
+  opcosts: {
+    arr: 'opCostBreakdown', field: 'operatingCosts', inputs: ['cfg-opcosts'], noun: 'Operating Costs',
+    defaults: ['Staff / Payroll', 'Utilities', 'Insurance', 'Maintenance & Repairs', 'Property Tax', 'Land Lease', 'Marketing', 'Admin / Office']
+  },
+  build: {
+    arr: 'buildBreakdown', field: 'buildCost', inputs: ['cfg-buildcost', 'new-buildcost'], noun: 'Build Cost',
+    defaults: ['Bubble', 'Grade Beam', 'Clubhouse', 'Install', 'Court Surface (Quartz)', 'Nets']
+  }
+};
 
 function escapeAttr(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
@@ -545,110 +577,119 @@ function escapeAttr(s) {
 function breakdownTotal(items) {
   return (items || []).reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
 }
-function setBuildCostInputs(val) {
-  const s = val ? Number(val).toLocaleString('en-CA') : '';
-  const a = document.getElementById('cfg-buildcost');
-  const b = document.getElementById('new-buildcost');
-  if (a) a.value = s;
-  if (b) b.value = s;
+function bdItems(kind) {
+  return model.configurations[model.selectedConfig][BREAKDOWN_KINDS[kind].arr];
 }
-function setBuildCostReadonly(ro) {
-  ['cfg-buildcost', 'new-buildcost'].forEach(id => {
+function setFieldInputs(kind, val) {
+  const s = val ? Number(val).toLocaleString('en-CA') : '';
+  BREAKDOWN_KINDS[kind].inputs.forEach(id => { const el = document.getElementById(id); if (el) el.value = s; });
+}
+function setFieldReadonly(kind, ro) {
+  BREAKDOWN_KINDS[kind].inputs.forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     el.readOnly = ro;
     el.style.background = ro ? 'var(--gray-50)' : '';
     el.style.cursor = ro ? 'not-allowed' : '';
-    el.title = ro ? 'Calculated from the Build Cost Breakdown below' : '';
+    el.title = ro ? 'Calculated from the breakdown below' : '';
   });
 }
 
-function toggleBreakdown(header) {
+function toggleBreakdown(kind, header) {
   header.classList.toggle('open');
-  document.getElementById('breakdown-body').classList.toggle('open');
+  document.getElementById('breakdown-body-' + kind).classList.toggle('open');
 }
 
-function renderBreakdown() {
+function renderBreakdown(kind) {
   const cfg = model.configurations[model.selectedConfig];
-  const box = document.getElementById('breakdown-content');
-  const lbl = document.getElementById('bd-config-label');
+  const box = document.getElementById('breakdown-content-' + kind);
+  const lbl = document.getElementById('bd-label-' + kind);
   if (!cfg || !box) return;
   if (lbl) lbl.textContent = '· ' + cfg.label;
 
-  const items = cfg.buildBreakdown;
+  const items = cfg[BREAKDOWN_KINDS[kind].arr];
   if (!items || items.length === 0) {
-    setBuildCostReadonly(false);
+    setFieldReadonly(kind, false);
     box.innerHTML =
-      '<div style="color:var(--gray-500);font-size:13px;margin-bottom:12px">No itemized breakdown for this configuration. Build Cost is entered manually above.</div>' +
-      '<button class="bd-btn" onclick="startBreakdown()">+ Start itemized breakdown</button>';
+      `<div style="color:var(--gray-500);font-size:13px;margin-bottom:12px">No itemized breakdown for this configuration. ${BREAKDOWN_KINDS[kind].noun} is entered manually above.</div>` +
+      `<button class="bd-btn" onclick="startBreakdown('${kind}')">+ Start itemized breakdown</button>`;
     return;
   }
 
-  setBuildCostReadonly(true);
+  setFieldReadonly(kind, true);
   const rows = items.map((it, idx) => `
     <div class="bd-row">
-      <input class="bd-label" type="text" value="${escapeAttr(it.label)}" placeholder="Cost item" oninput="editBreakdown(${idx},'label',this.value)">
+      <input class="bd-label" type="text" value="${escapeAttr(it.label)}" placeholder="Item" oninput="editBreakdown('${kind}',${idx},'label',this.value)">
       <div class="input-prefix bd-amt"><span class="prefix">$</span>
-        <input type="text" value="${it.amount ? Number(it.amount).toLocaleString('en-CA') : ''}" placeholder="0" oninput="editBreakdown(${idx},'amount',this.value)" onfocus="fmtFocus(this)" onblur="fmtBlur(this)">
+        <input type="text" value="${it.amount ? Number(it.amount).toLocaleString('en-CA') : ''}" placeholder="0" oninput="editBreakdown('${kind}',${idx},'amount',this.value)" onfocus="fmtFocus(this)" onblur="fmtBlur(this)">
       </div>
-      <button class="bd-remove" title="Remove line" onclick="removeBreakdown(${idx})">✕</button>
+      <button class="bd-remove" title="Remove line" onclick="removeBreakdown('${kind}',${idx})">✕</button>
     </div>`).join('');
   box.innerHTML = `
     <div class="bd-list">${rows}</div>
     <div class="bd-foot">
-      <button class="bd-btn" onclick="addBreakdown()">+ Add line</button>
-      <div class="bd-total">Total build cost: <strong id="bd-total-val">${fmt(breakdownTotal(items))}</strong></div>
+      <button class="bd-btn" onclick="addBreakdown('${kind}')">+ Add line</button>
+      <div class="bd-total">Total ${BREAKDOWN_KINDS[kind].noun.toLowerCase()}: <strong id="bd-total-${kind}">${fmt(breakdownTotal(items))}</strong></div>
     </div>
-    <button class="bd-clear" onclick="clearBreakdown()">Clear breakdown · back to manual entry</button>`;
+    <button class="bd-clear" onclick="clearBreakdown('${kind}')">Clear breakdown · back to manual entry</button>`;
 }
 
-function applyBreakdown() {
+function applyBreakdown(kind) {
   const cfg = model.configurations[model.selectedConfig];
-  const total = breakdownTotal(cfg.buildBreakdown);
-  cfg.buildCost = total;
-  setBuildCostInputs(total);
-  const tv = document.getElementById('bd-total-val');
+  const K = BREAKDOWN_KINDS[kind];
+  const total = breakdownTotal(cfg[K.arr]);
+  cfg[K.field] = total;
+  setFieldInputs(kind, total);
+  const tv = document.getElementById('bd-total-' + kind);
   if (tv) tv.textContent = fmt(total);
   recalc();
 }
 
-function editBreakdown(idx, field, value) {
-  const items = model.configurations[model.selectedConfig].buildBreakdown;
+function editBreakdown(kind, idx, field, value) {
+  const items = bdItems(kind);
   if (!items || !items[idx]) return;
   if (field === 'amount') items[idx].amount = parseFloat(String(value).replace(/[,$\s]/g, '')) || 0;
   else items[idx].label = value;
-  applyBreakdown();
+  applyBreakdown(kind);
 }
 
-function addBreakdown() {
+function addBreakdown(kind) {
   const cfg = model.configurations[model.selectedConfig];
-  if (!cfg.buildBreakdown) cfg.buildBreakdown = [];
-  cfg.buildBreakdown.push({ label: '', amount: 0 });
-  renderBreakdown();
-  applyBreakdown();
+  const K = BREAKDOWN_KINDS[kind];
+  if (!cfg[K.arr]) cfg[K.arr] = [];
+  cfg[K.arr].push({ label: '', amount: 0 });
+  renderBreakdown(kind);
+  applyBreakdown(kind);
 }
 
-function removeBreakdown(idx) {
+function removeBreakdown(kind, idx) {
   const cfg = model.configurations[model.selectedConfig];
-  cfg.buildBreakdown.splice(idx, 1);
-  renderBreakdown();
-  applyBreakdown();
+  cfg[BREAKDOWN_KINDS[kind].arr].splice(idx, 1);
+  renderBreakdown(kind);
+  applyBreakdown(kind);
 }
 
-function startBreakdown() {
-  model.configurations[model.selectedConfig].buildBreakdown =
-    DEFAULT_BUILD_ITEMS.map(l => ({ label: l, amount: 0 }));
-  renderBreakdown();
-  applyBreakdown();
-}
-
-function clearBreakdown() {
+function startBreakdown(kind) {
   const cfg = model.configurations[model.selectedConfig];
-  const keep = cfg.buildCost;
-  cfg.buildBreakdown = [];
-  renderBreakdown();
-  setBuildCostInputs(keep);
+  cfg[BREAKDOWN_KINDS[kind].arr] = BREAKDOWN_KINDS[kind].defaults.map(l => ({ label: l, amount: 0 }));
+  renderBreakdown(kind);
+  applyBreakdown(kind);
+}
+
+function clearBreakdown(kind) {
+  const cfg = model.configurations[model.selectedConfig];
+  const K = BREAKDOWN_KINDS[kind];
+  const keep = cfg[K.field];
+  cfg[K.arr] = [];
+  renderBreakdown(kind);
+  setFieldInputs(kind, keep);
   recalc();
+}
+
+function renderAllBreakdowns() {
+  renderBreakdown('revenue');
+  renderBreakdown('opcosts');
+  renderBreakdown('build');
 }
 
 function schedSave() {
