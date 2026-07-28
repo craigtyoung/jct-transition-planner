@@ -1,58 +1,13 @@
 {
-  "currentSite": {
-    "annualRevenue": 2500000,
-    "operatingCosts": 1920000,
-    "annualLease": 180000
-  },
-  "newSite": {
-    "buildCost": 2800000,
-    "downPayment": 750000,
-    "interestRate": 6.5,
-    "loanTermYears": 20,
-    "revenueGrowth": 5,
-    "opCostGrowth": 2,
-    "annualLandSublease": 100000,
-    "maintenanceSavings": 25000
-  },
+  "currentSite": {"annualRevenue": 2319758, "operatingCosts": 1546839, "annualLease": 169500},
+  "newSite": {"buildCost": 1350000, "downPayment": 800000, "interestRate": 6.5, "loanTermYears": 20, "revenueGrowth": 5, "opCostGrowth": 2, "annualLandSublease": 100000, "maintenanceSavings": 25000},
   "selectedConfig": "B",
   "configurations": {
-    "A": {
-      "label": "6 Tennis Courts",
-      "revenue": 2500000,
-      "operatingCosts": 1920000,
-      "buildCost": 2500000
-    },
-    "B": {
-      "label": "6 Tennis + 2 Pickleball",
-      "revenue": 2880000,
-      "operatingCosts": 2050000,
-      "buildCost": 2800000
-    },
-    "C": {
-      "label": "6 Tennis + 4 Pickleball",
-      "revenue": 3200000,
-      "operatingCosts": 2270000,
-      "buildCost": 3000000
-    },
-    "D": {
-      "label": "8 Tennis + 4 Pickleball",
-      "revenue": 4000000,
-      "operatingCosts": 2800000,
-      "buildCost": 3500000
-    },
-    "E": {
-      "label": "8 Tennis Courts",
-      "revenue": 3300000,
-      "operatingCosts": 2300000,
-      "buildCost": 2900000
-    }
+    "A": {"label": "6 Tennis Courts", "courts": 6, "fillRate": 100, "revenue": 2319756, "operatingCosts": 1546842, "buildCost": 1100000, "buildBreakdown": [{"label":"Bubble","amount":750000},{"label":"Grade Beam","amount":100000},{"label":"Clubhouse","amount":100000},{"label":"Install","amount":50000},{"label":"Court Surface (Quartz)","amount":100000}]},
+    "B": {"label": "8 Tennis Courts", "courts": 8, "fillRate": 100, "revenue": 3093008, "operatingCosts": 1927156, "buildCost": 1350000, "buildBreakdown": [{"label":"Bubble","amount":900000},{"label":"Grade Beam","amount":125000},{"label":"Clubhouse","amount":100000},{"label":"Install","amount":100000},{"label":"Court Surface (Quartz)","amount":125000}]},
+    "C": {"label": "10 Tennis Courts", "courts": 10, "fillRate": 88, "revenue": 3402309, "operatingCosts": 2111670, "buildCost": 1600000},
+    "D": {"label": "12 Tennis Courts", "courts": 12, "fillRate": 78, "revenue": 3618819, "operatingCosts": 2257023, "buildCost": 1850000},
+    "P": {"label": "Pickleball — Coming Soon", "revenue": 0, "operatingCosts": 0, "buildCost": 0}
   },
-  "partnerEquity": {
-    "partnerCapital": 0,
-    "structure": "Preferred Return + Equity Split",
-    "preferredReturn": 8,
-    "craigEquity": 70,
-    "partnerEquity": 30
-  },
-  "lastUpdated": "2026-06-17T01:46:46.228Z"
+  "partnerEquity": {"partnerCapital": 0, "structure": "Preferred Return + Equity Split", "preferredReturn": 8, "craigEquity": 70, "partnerEquity": 30}
 }

@@ -19,6 +19,19 @@
   .bd-btn:hover{background:var(--navy,#0f2540);color:#fff}
   .bd-clear{margin-top:12px;border:none;background:transparent;color:var(--gray-500,#64748b);font-size:12px;text-decoration:underline;cursor:pointer;padding:0}
   .bd-clear:hover{color:var(--red,#dc2626)}
+  /* Court model */
+  .cm-wrap{background:var(--gray-50,#f1f5f9);border:1px solid var(--gray-200,#e2e8f0);border-radius:12px;padding:18px;margin-bottom:16px}
+  .cm-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+  .cm-courts{font-size:15px;color:var(--gray-500,#64748b)}
+  .cm-courts strong{color:var(--navy,#0f2540);font-size:22px;margin-left:6px}
+  .cm-fillbox{display:flex;align-items:center;gap:12px;flex:1;min-width:280px}
+  .cm-fillbox label{font-size:13px;color:var(--gray-500,#64748b);white-space:nowrap}
+  .cm-fillbox input[type=range]{flex:1;accent-color:var(--navy,#0f2540)}
+  .cm-fillval{font-size:20px;font-weight:800;color:var(--navy,#0f2540);width:64px;text-align:right}
+  .cm-readout{display:flex;gap:24px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--gray-200,#e2e8f0)}
+  .cm-stat{font-size:12px;color:var(--gray-500,#64748b)}
+  .cm-stat b{display:block;font-size:18px;font-weight:800;margin-top:2px}
+  .cm-note{font-size:12px;color:var(--gray-500,#64748b);margin-top:12px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -39,31 +52,53 @@
 
   <div class="page-header">
     <div class="page-title">Financial Model</div>
-    <div class="page-subtitle">Interactive pro forma — all inputs editable, calculations update in real time</div>
+    <div class="page-subtitle">Interactive pro forma — court model drives revenue &amp; costs, calculations update in real time</div>
   </div>
 
   <!-- Court Configuration Selector -->
   <div class="card section">
     <div class="card-title">Court Configuration</div>
     <div class="config-tabs" id="config-tabs">
-      <button class="config-tab" data-key="A" onclick="selectConfig('A')">6 Tennis Courts</button>
-      <button class="config-tab" data-key="E" onclick="selectConfig('E')">8 Tennis Courts</button>
-      <button class="config-tab" data-key="B" onclick="selectConfig('B')">6T + 2 Pickleball</button>
-      <button class="config-tab active" data-key="C" onclick="selectConfig('C')">6T + 4 Pickleball ★</button>
-      <button class="config-tab" data-key="D" onclick="selectConfig('D')">8T + 4 Pickleball</button>
+      <button class="config-tab active" data-key="A" onclick="selectConfig('A')">6 Tennis Courts</button>
+      <button class="config-tab" data-key="B" onclick="selectConfig('B')">8 Tennis Courts</button>
+      <button class="config-tab" data-key="C" onclick="selectConfig('C')">10 Tennis Courts</button>
+      <button class="config-tab" data-key="D" onclick="selectConfig('D')">12 Tennis Courts</button>
+      <button class="config-tab" data-key="P" onclick="selectConfig('P')" title="Not modelled yet">Pickleball — Coming Soon</button>
+    </div>
+
+    <!-- Court Model: fill-rate lever -->
+    <div class="cm-wrap" id="court-model">
+      <div class="cm-top">
+        <div class="cm-courts">Tennis courts: <strong id="cm-courts">6</strong></div>
+        <div class="cm-fillbox">
+          <label>Fill rate</label>
+          <input type="range" id="cm-fill" min="40" max="100" step="1" value="100" oninput="onFillChange(this.value)">
+          <span class="cm-fillval" id="cm-fill-val">100%</span>
+        </div>
+      </div>
+      <div class="cm-readout">
+        <div class="cm-stat">Revenue<b id="cm-rev">—</b></div>
+        <div class="cm-stat">Operating costs<b id="cm-opc">—</b></div>
+        <div class="cm-stat">Operating profit<b id="cm-op-profit" style="color:var(--green)">—</b></div>
+      </div>
+      <div class="cm-note" id="cm-note">
+        Revenue and operating costs are computed from <strong>courts × fill rate</strong> using the real 6-court actuals
+        ($386.6K revenue/court at 100% fill). Slide the fill rate to model demand. Operating costs exclude land lease
+        (handled below as land sublease) and bubble financing (handled as debt service).
+      </div>
     </div>
 
     <div class="grid-3 gap-20">
       <div class="input-group">
-        <label>Revenue for Selected Config ($)</label>
+        <label>Revenue for Selected Config ($) — computed</label>
         <div class="input-prefix"><span class="prefix">$</span>
-          <input type="text" id="cfg-revenue" oninput="onConfigValueChange()" onfocus="fmtFocus(this)" onblur="fmtBlur(this,onConfigValueChange)">
+          <input type="text" id="cfg-revenue" readonly style="background:var(--gray-50);cursor:not-allowed" title="Computed from the court model above">
         </div>
       </div>
       <div class="input-group">
-        <label>Operating Costs for Selected Config ($)</label>
+        <label>Operating Costs for Selected Config ($) — computed</label>
         <div class="input-prefix"><span class="prefix">$</span>
-          <input type="text" id="cfg-opcosts" oninput="onConfigValueChange()" onfocus="fmtFocus(this)" onblur="fmtBlur(this,onConfigValueChange)">
+          <input type="text" id="cfg-opcosts" readonly style="background:var(--gray-50);cursor:not-allowed" title="Computed from the court model above">
         </div>
       </div>
       <div class="input-group">
@@ -74,26 +109,8 @@
       </div>
     </div>
 
-    <!-- Itemized Breakdowns (collapsible, per-config): Revenue · Operating Costs · Build Cost -->
+    <!-- Build Cost itemized breakdown (collapsible) -->
     <div class="section" style="margin-top:16px">
-      <div class="collapsible-header" onclick="toggleBreakdown('revenue', this)">
-        <div class="card-title" style="margin-bottom:0">Revenue Breakdown <span id="bd-label-revenue" style="color:var(--gray-500);font-weight:500;font-size:13px"></span></div>
-        <span class="chevron">▶</span>
-      </div>
-      <div class="collapsible-body" id="breakdown-body-revenue">
-        <div id="breakdown-content-revenue" style="padding-top:14px"></div>
-      </div>
-    </div>
-    <div class="section" style="margin-top:12px">
-      <div class="collapsible-header" onclick="toggleBreakdown('opcosts', this)">
-        <div class="card-title" style="margin-bottom:0">Operating Cost Breakdown <span id="bd-label-opcosts" style="color:var(--gray-500);font-weight:500;font-size:13px"></span></div>
-        <span class="chevron">▶</span>
-      </div>
-      <div class="collapsible-body" id="breakdown-body-opcosts">
-        <div id="breakdown-content-opcosts" style="padding-top:14px"></div>
-      </div>
-    </div>
-    <div class="section" style="margin-top:12px">
       <div class="collapsible-header" onclick="toggleBreakdown('build', this)">
         <div class="card-title" style="margin-bottom:0">Build Cost Breakdown <span id="bd-label-build" style="color:var(--gray-500);font-weight:500;font-size:13px"></span></div>
         <span class="chevron">▶</span>
@@ -201,7 +218,7 @@
 
     <!-- Right: Results -->
     <div class="card">
-      <div class="card-title">Pro Forma — <span id="config-label-display">6T + 4 Pickleball</span></div>
+      <div class="card-title">Pro Forma — <span id="config-label-display">6 Tennis Courts</span></div>
 
       <div class="table-wrap">
         <table>
@@ -255,7 +272,7 @@
               <td class="right text-gray" style="font-size:11px" id="r-cum-21">—</td>
             </tr>
             <tr class="row-highlight">
-              <td>vs Current ($400K)</td>
+              <td>vs Current (<span id="vs-label">—</span>)</td>
               <td class="right" id="r-vs-1">—</td><td class="right" id="r-vs-5">—</td>
               <td class="right" id="r-vs-10">—</td><td class="right" id="r-vs-20">—</td>
               <td class="right" id="r-vs-21">—</td>
@@ -338,6 +355,28 @@
 let model = {};
 let saveTimer = null;
 
+// Per-court unit economics, derived from the real 6-court 2025/26 actuals.
+// revenue $2,319,758 / 6 = $386,626 per court at 100% fill.
+// Operating costs EXCLUDE land lease (pro forma subtracts land sublease separately)
+// and EXCLUDE bubble financing (handled as debt service).
+const COURT_ECON = {
+  revPerCourt:   386626,  // revenue per court at 100% fill
+  varPerCourt:   163167,  // coaching + program cost per court — scales with fill (utilisation)
+  facPerCourt:   26990,   // utilities/maintenance per court — scales with court count (built capacity)
+  fixedOverhead: 405900   // admin, accounting, Victor base, insurance — flat, independent of courts
+};
+
+function computeFromCourts(courts, fillRate) {
+  const f = (Number(fillRate) || 0) / 100;
+  const revenue = Math.round(courts * COURT_ECON.revPerCourt * f);
+  const operatingCosts = Math.round(
+    courts * COURT_ECON.varPerCourt * f +  // variable: scales with utilisation
+    courts * COURT_ECON.facPerCourt +      // facility: scales with court count
+    COURT_ECON.fixedOverhead               // fixed overhead
+  );
+  return { revenue, operatingCosts };
+}
+
 async function load() {
   const res = await fetch('/api/financial-model');
   model = await res.json();
@@ -364,7 +403,8 @@ async function load() {
   document.getElementById('pe-pref').value      = pe.preferredReturn;
   document.getElementById('pe-craig-eq').value  = pe.craigEquity;
 
-  selectConfig(model.selectedConfig, false);
+  const startKey = (model.configurations[model.selectedConfig]) ? model.selectedConfig : 'A';
+  selectConfig(startKey, false);
   recalc();
   updatePartnerInputs();
 
@@ -376,26 +416,64 @@ function selectConfig(key, doSave = true) {
   model.selectedConfig = key;
   const cfg = model.configurations[key];
 
-  // Update tabs
   document.querySelectorAll('.config-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.key === key);
   });
 
-  document.getElementById('cfg-revenue').value   = cfg.revenue.toLocaleString('en-CA');
-  document.getElementById('cfg-opcosts').value   = cfg.operatingCosts.toLocaleString('en-CA');
-  document.getElementById('cfg-buildcost').value = (cfg.buildCost || 0).toLocaleString('en-CA');
-  document.getElementById('new-buildcost').value = (cfg.buildCost || 0).toLocaleString('en-CA');
-  document.getElementById('config-label-display').textContent = cfg.label;
-  renderAllBreakdowns();
+  const cm = document.getElementById('court-model');
+  if (cfg && cfg.courts) {
+    // Tennis court-model config: fill lever drives revenue + opcost
+    cm.style.display = '';
+    document.getElementById('cm-courts').textContent = cfg.courts;
+    document.getElementById('cm-fill').value = cfg.fillRate;
+    document.getElementById('cm-fill-val').textContent = cfg.fillRate + '%';
+    applyCourtModel(key); // computes + writes revenue/opcost into cfg + inputs
+  } else {
+    // Non-court config (e.g. Pickleball placeholder): hide the lever
+    cm.style.display = 'none';
+    document.getElementById('cfg-revenue').value = (cfg && cfg.revenue ? cfg.revenue : 0).toLocaleString('en-CA');
+    document.getElementById('cfg-opcosts').value = (cfg && cfg.operatingCosts ? cfg.operatingCosts : 0).toLocaleString('en-CA');
+  }
+
+  document.getElementById('cfg-buildcost').value = (cfg && cfg.buildCost ? cfg.buildCost : 0).toLocaleString('en-CA');
+  document.getElementById('new-buildcost').value = (cfg && cfg.buildCost ? cfg.buildCost : 0).toLocaleString('en-CA');
+  document.getElementById('config-label-display').textContent = cfg ? cfg.label : '—';
+  renderBreakdown('build');
   recalc();
   if (doSave) schedSave();
 }
 
+// Recompute revenue + operating costs for the selected court config from courts × fill.
+function applyCourtModel(key) {
+  const cfg = model.configurations[key];
+  if (!cfg || !cfg.courts) return;
+  const out = computeFromCourts(cfg.courts, cfg.fillRate);
+  cfg.revenue = out.revenue;
+  cfg.operatingCosts = out.operatingCosts;
+  document.getElementById('cfg-revenue').value = out.revenue.toLocaleString('en-CA');
+  document.getElementById('cfg-opcosts').value = out.operatingCosts.toLocaleString('en-CA');
+  const profit = out.revenue - out.operatingCosts;
+  document.getElementById('cm-rev').textContent = fmt(out.revenue);
+  document.getElementById('cm-opc').textContent = fmt(out.operatingCosts);
+  const pEl = document.getElementById('cm-op-profit');
+  pEl.textContent = fmt(profit);
+  pEl.style.color = profit >= 0 ? 'var(--green)' : 'var(--red)';
+}
+
+function onFillChange(val) {
+  const key = model.selectedConfig;
+  const cfg = model.configurations[key];
+  if (!cfg || !cfg.courts) return;
+  cfg.fillRate = Number(val) || 0;
+  document.getElementById('cm-fill-val').textContent = cfg.fillRate + '%';
+  applyCourtModel(key);
+  recalc();
+  schedSave();
+}
+
 function onConfigValueChange() {
   const key = model.selectedConfig;
-  model.configurations[key].revenue        = numVal('cfg-revenue');
-  model.configurations[key].operatingCosts = numVal('cfg-opcosts');
-  model.configurations[key].buildCost      = numVal('cfg-buildcost');
+  model.configurations[key].buildCost = numVal('cfg-buildcost');
   document.getElementById('new-buildcost').value = numVal('cfg-buildcost').toLocaleString('en-CA');
   recalc();
   schedSave();
@@ -445,18 +523,16 @@ function recalc() {
   const ds     = calcDebtService(v.buildCost, v.downPmt, v.rate, v.term);
   const loanAmt = Math.max(0, v.buildCost - v.downPmt);
 
-  // Update displays
   document.getElementById('cur-net').textContent     = fmt(curNet);
   document.getElementById('loan-amount').textContent  = fmt(loanAmt);
   document.getElementById('debt-service').textContent = fmt(ds);
+  document.getElementById('vs-label').textContent     = fmt(curNet);
 
-  // Revenue and operating costs at year y with compound growth
   const g  = v.growth;
   const og = v.opGrowth;
   function revAt(y) { return cfgRev * Math.pow(1 + g, y); }
   function opcAt(y) { return cfgOpc * Math.pow(1 + og, y); }
 
-  // Cumulative profit summed year by year (handles growth + debt payoff correctly)
   function cumProfit(upTo) {
     let total = 0;
     for (let i = 1; i <= upTo; i++) {
@@ -465,10 +541,8 @@ function recalc() {
     return total;
   }
 
-  // Year 1 net for partner modeller
   const net1 = revAt(1) - opcAt(1) - ds - v.sublease + v.maintSav;
 
-  // Table rows
   const years = [1, 5, 10, 20, 21];
   years.forEach(y => {
     const isDebtFree = y === 21;
@@ -486,7 +560,7 @@ function recalc() {
     if (netEl) { netEl.textContent = fmt(n); netEl.className = `right ${n >= 0 ? 'text-green' : 'text-red'}`; }
     set(`r-cum-${y}`, fmt(cum));
 
-    const vs = n - 400000;
+    const vs = n - curNet;
     const vsEl = document.getElementById(`r-vs-${y}`);
     if (vsEl) {
       vsEl.textContent = (vs >= 0 ? '+' : '') + fmt(vs);
@@ -494,7 +568,6 @@ function recalc() {
     }
   });
 
-  // Sync model
   model.currentSite = { annualRevenue: v.curRevenue, operatingCosts: v.curOpCosts, annualLease: v.curLease };
   model.newSite = { buildCost: v.buildCost, downPayment: v.downPmt, interestRate: v.rate, loanTermYears: v.term, revenueGrowth: g * 100, opCostGrowth: og * 100, annualLandSublease: v.sublease, maintenanceSavings: v.maintSav };
 
@@ -502,9 +575,7 @@ function recalc() {
   schedSave();
 }
 
-function updatePartnerInputs() {
-  recalcPartner();
-}
+function updatePartnerInputs() { recalcPartner(); }
 
 function recalcPartner(netOverride) {
   const pe = {
@@ -542,7 +613,6 @@ function recalcPartner(netOverride) {
   set('pe-out-craig',   fmt(craigNet));
   set('pe-out-payback', paybackYrs + ' years');
 
-  // Sync model
   model.partnerEquity = {
     partnerCapital: pe.capital, structure: pe.struct,
     preferredReturn: pe.pref, craigEquity: pe.craigEq, partnerEquity: 100 - pe.craigEq
@@ -554,17 +624,8 @@ function togglePartner(header) {
   document.getElementById('partner-body').classList.toggle('open');
 }
 
-// ---- Itemized Breakdowns (per-config, collapsible, opt-in) ----
-// One reusable component drives Revenue, Operating Costs, and Build Cost.
+// ---- Build Cost itemized breakdown (collapsible, opt-in) ----
 const BREAKDOWN_KINDS = {
-  revenue: {
-    arr: 'revenueBreakdown', field: 'revenue', inputs: ['cfg-revenue'], noun: 'Revenue',
-    defaults: ['Membership Dues', 'Court Rentals', 'Lessons / Coaching', 'Pickleball Programs', 'Pro Shop / Retail', 'Café / F&B', 'Events & Tournaments']
-  },
-  opcosts: {
-    arr: 'opCostBreakdown', field: 'operatingCosts', inputs: ['cfg-opcosts'], noun: 'Operating Costs',
-    defaults: ['Staff / Payroll', 'Utilities', 'Insurance', 'Maintenance & Repairs', 'Property Tax', 'Land Lease', 'Marketing', 'Admin / Office']
-  },
   build: {
     arr: 'buildBreakdown', field: 'buildCost', inputs: ['cfg-buildcost', 'new-buildcost'], noun: 'Build Cost',
     defaults: ['Bubble', 'Grade Beam', 'Clubhouse', 'Install', 'Court Surface (Quartz)', 'Nets']
@@ -684,12 +745,6 @@ function clearBreakdown(kind) {
   renderBreakdown(kind);
   setFieldInputs(kind, keep);
   recalc();
-}
-
-function renderAllBreakdowns() {
-  renderBreakdown('revenue');
-  renderBreakdown('opcosts');
-  renderBreakdown('build');
 }
 
 function schedSave() {
