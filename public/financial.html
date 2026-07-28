@@ -721,7 +721,10 @@ function addBreakdown(kind) {
 
 function removeBreakdown(kind, idx) {
   const cfg = model.configurations[model.selectedConfig];
-  cfg[BREAKDOWN_KINDS[kind].arr].splice(idx, 1);
+  const items = cfg[BREAKDOWN_KINDS[kind].arr];
+  const label = (items && items[idx] && items[idx].label) ? items[idx].label : 'this line';
+  if (!confirm('Remove "' + label + '"? This can\'t be undone.')) return;
+  items.splice(idx, 1);
   renderBreakdown(kind);
   refreshConfig();
   recalc();
