@@ -6,6 +6,11 @@
 <title>JCT Transition Planner — Command Centre</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="style.css">
+<style>
+  .tip{display:inline-block;width:15px;height:15px;line-height:15px;text-align:center;border-radius:50%;background:var(--gray-200,#e2e8f0);color:var(--gray-500,#64748b);font-size:10px;font-weight:700;cursor:help;margin-left:5px;position:relative;font-style:normal}
+  .tip::after{content:attr(data-tip);position:absolute;left:50%;bottom:150%;transform:translateX(-50%);background:var(--navy,#0f2540);color:#fff;font-size:12px;font-weight:400;line-height:1.45;padding:9px 11px;border-radius:8px;width:240px;white-space:normal;text-align:left;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s;z-index:30;box-shadow:0 6px 18px rgba(0,0,0,.2)}
+  .tip:hover::after{opacity:1;visibility:visible}
+</style>
 </head>
 <body>
 
@@ -118,27 +123,34 @@
     </div>
   </div>
 
-  <!-- Quick Summary -->
+  <!-- Key Numbers — live from the Financial Model, per selected scenario -->
   <div class="card section">
-    <div class="card-title">Key Numbers</div>
+    <div class="card-title">Key Numbers <span style="font-weight:500;font-size:13px;color:var(--gray-500)">— live from the Financial Model, scenario: <span id="kn-scenario" style="color:var(--navy);font-weight:700">—</span></span></div>
+    <div class="config-tabs" id="kn-tabs" style="margin-bottom:18px">
+      <button class="config-tab" data-key="A" onclick="selectScenario('A')">6 Courts</button>
+      <button class="config-tab" data-key="B" onclick="selectScenario('B')">8 Courts</button>
+      <button class="config-tab" data-key="C" onclick="selectScenario('C')">10 Courts</button>
+      <button class="config-tab" data-key="D" onclick="selectScenario('D')">12 Courts</button>
+    </div>
     <div class="grid-4">
       <div>
-        <div class="big-num">$2.5M</div>
+        <div class="big-num" id="kn-cur-rev">—</div>
         <div class="num-label">Current annual revenue</div>
       </div>
       <div>
-        <div class="big-num green">$400K</div>
-        <div class="num-label">Current net profit / year</div>
+        <div class="big-num green" id="kn-cur-net">—</div>
+        <div class="num-label">Current operating profit / yr<span class="tip" data-tip="Before income tax (~$229K) and owner dividends (~$230K). All salaries already deducted — not take-home.">i</span></div>
       </div>
       <div>
-        <div class="big-num">$591K</div>
-        <div class="num-label">New site net profit (6T+4PB, Year 1)</div>
+        <div class="big-num" id="kn-new-y1">—</div>
+        <div class="num-label">New site net profit (Year 1)</div>
       </div>
       <div>
-        <div class="big-num green">$855K</div>
+        <div class="big-num green" id="kn-new-y21">—</div>
         <div class="num-label">New site net profit (Year 21, debt-free)</div>
       </div>
     </div>
+    <div style="font-size:11px;color:var(--gray-500);margin-top:14px">Pulled live from the Financial Model. New-site figures are before income tax + owner distributions. Switch scenarios above — the choice syncs with the Financial Model page.</div>
   </div>
 
 </div>
@@ -147,6 +159,8 @@
 
 <script>
 let config = {};
+let fm = {};
+let scenario = 'B';
 let useStretch = false;
 let saveTimer = null;
 
@@ -174,6 +188,15 @@ async function load() {
   updateCountdowns();
   updateCapital();
   updatePills();
+
+  // Pull the live financial model so Key Numbers reflect the selected scenario
+  try {
+    const fmRes = await fetch('/api/financial-model');
+    fm = await fmRes.json();
+    const sel = fm.configurations && fm.configurations[fm.selectedConfig];
+    scenario = (sel && sel.courts) ? fm.selectedConfig : 'B';
+    computeKeyNumbers();
+  } catch (e) { /* financial model unavailable — leave Key Numbers blank */ }
 
   const ts = config.lastUpdated ? new Date(config.lastUpdated).toLocaleString() : '—';
   document.getElementById('footer-ts').textContent = `JCT Transition Planner · Last saved: ${ts}`;
@@ -287,6 +310,62 @@ async function save() {
 
 function fmt(n) {
   return '$' + Math.round(n).toLocaleString('en-CA');
+}
+
+// Compact format for the Key Number tiles ($2.32M / $603K)
+function fmM(n) {
+  const v = Math.round(n);
+  const a = Math.abs(v);
+  if (a >= 1000000) return (v < 0 ? '-$' : '$') + (a / 1000000).toFixed(2) + 'M';
+  if (a >= 1000)    return (v < 0 ? '-$' : '$') + Math.round(a / 1000) + 'K';
+  return (v < 0 ? '-$' : '$') + a.toLocaleString('en-CA');
+}
+
+function calcDebtService(buildCost, downPmt, rate, termYears) {
+  const principal = Math.max(0, buildCost - downPmt);
+  if (principal <= 0 || rate <= 0) return 0;
+  const r = rate / 100 / 12, n = termYears * 12, f = Math.pow(1 + r, n);
+  return principal * r * f / (f - 1) * 12;
+}
+
+// Key Numbers pulled live from the financial model, for the selected scenario.
+// Mirrors the pro-forma math on the Financial Model page.
+function computeKeyNumbers() {
+  if (!fm.currentSite || !fm.configurations) return;
+  const cs = fm.currentSite;
+  const curNet = cs.annualRevenue - cs.operatingCosts - cs.annualLease;
+  document.querySelectorAll('#kn-tabs .config-tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.key === scenario));
+  document.getElementById('kn-cur-rev').textContent = fmM(cs.annualRevenue);
+  document.getElementById('kn-cur-net').textContent = fmM(curNet);
+
+  const cfg = fm.configurations[scenario];
+  if (!cfg) return;
+  document.getElementById('kn-scenario').textContent = cfg.label;
+  const ns = fm.newSite || {};
+  const g  = (ns.revenueGrowth || 0) / 100;
+  const og = (ns.opCostGrowth || 0) / 100;
+  const ds = calcDebtService(cfg.buildCost, ns.downPayment, ns.interestRate, ns.loanTermYears);
+  const sub = ns.annualLandSublease || 0;
+  const ms  = ns.maintenanceSavings || 0;
+  const y1  = cfg.revenue * (1 + g) - cfg.operatingCosts * (1 + og) - ds - sub + ms;
+  const y21 = cfg.revenue * Math.pow(1 + g, 21) - cfg.operatingCosts * Math.pow(1 + og, 21) - sub + ms;
+  document.getElementById('kn-new-y1').textContent  = fmM(y1);
+  document.getElementById('kn-new-y21').textContent = fmM(y21);
+}
+
+async function selectScenario(key) {
+  scenario = key;
+  computeKeyNumbers();
+  if (fm && fm.selectedConfig !== undefined) {
+    fm.selectedConfig = key;
+    try {
+      await fetch('/api/financial-model', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fm)
+      });
+    } catch (e) { /* keep local selection even if save fails */ }
+  }
 }
 
 load();
