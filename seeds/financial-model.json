@@ -1,13 +1,932 @@
 {
-  "currentSite": {"annualRevenue": 2319758, "operatingCosts": 1546839, "annualLease": 169500},
-  "newSite": {"buildCost": 1350000, "downPayment": 800000, "interestRate": 6.5, "loanTermYears": 20, "revenueGrowth": 5, "opCostGrowth": 2, "annualLandSublease": 100000, "maintenanceSavings": 25000},
+  "currentSite": {
+    "annualRevenue": 2319758,
+    "operatingCosts": 1546839,
+    "annualLease": 169500
+  },
+  "newSite": {
+    "buildCost": 2201667,
+    "downPayment": 800000,
+    "interestRate": 6.5,
+    "loanTermYears": 20,
+    "revenueGrowth": 5,
+    "opCostGrowth": 2,
+    "annualLandSublease": 100000,
+    "maintenanceSavings": 25000
+  },
   "selectedConfig": "B",
   "configurations": {
-    "A": {"label": "6 Tennis Courts", "courts": 6, "fillRate": 100, "revenue": 2319756, "operatingCosts": 1546842, "buildCost": 1100000, "buildBreakdown": [{"label":"Bubble","amount":750000},{"label":"Grade Beam","amount":100000},{"label":"Clubhouse","amount":100000},{"label":"Install","amount":50000},{"label":"Court Surface (Quartz)","amount":100000}]},
-    "B": {"label": "8 Tennis Courts", "courts": 8, "fillRate": 100, "revenue": 3093008, "operatingCosts": 1927156, "buildCost": 1350000, "buildBreakdown": [{"label":"Bubble","amount":900000},{"label":"Grade Beam","amount":125000},{"label":"Clubhouse","amount":100000},{"label":"Install","amount":100000},{"label":"Court Surface (Quartz)","amount":125000}]},
-    "C": {"label": "10 Tennis Courts", "courts": 10, "fillRate": 88, "revenue": 3402309, "operatingCosts": 2111670, "buildCost": 1600000},
-    "D": {"label": "12 Tennis Courts", "courts": 12, "fillRate": 78, "revenue": 3618819, "operatingCosts": 2257023, "buildCost": 1850000},
-    "P": {"label": "Pickleball — Coming Soon", "revenue": 0, "operatingCosts": 0, "buildCost": 0}
+    "A": {
+      "label": "6 Tennis Courts",
+      "courts": 6,
+      "fillRate": 100,
+      "revenue": 2319758,
+      "operatingCosts": 1546839,
+      "buildCost": 1750000,
+      "incomeBreakdown": [
+        {
+          "label": "Membership",
+          "amount": 352875,
+          "firm": true
+        },
+        {
+          "label": "Membership Upgrades",
+          "amount": 9876,
+          "firm": true
+        },
+        {
+          "label": "Junior Clinic",
+          "amount": 1572597,
+          "firm": true
+        },
+        {
+          "label": "Adult Clinic",
+          "amount": 45256,
+          "firm": true
+        },
+        {
+          "label": "Summer Camp",
+          "amount": 176510,
+          "firm": true
+        },
+        {
+          "label": "Guest / Pay-as-you-go",
+          "amount": 135186,
+          "firm": true
+        },
+        {
+          "label": "Pro Shop",
+          "amount": 13764,
+          "firm": true
+        },
+        {
+          "label": "Misc",
+          "amount": 13694,
+          "firm": true
+        }
+      ],
+      "opCostBreakdown": [
+        {
+          "label": "Staff",
+          "amount": 657553,
+          "firm": true
+        },
+        {
+          "label": "Deduction Remittance",
+          "amount": 205330,
+          "firm": true
+        },
+        {
+          "label": "Professional Services",
+          "amount": 250048,
+          "firm": true
+        },
+        {
+          "label": "Utilities",
+          "amount": 75334,
+          "firm": true
+        },
+        {
+          "label": "Maintenance",
+          "amount": 73769,
+          "firm": true
+        },
+        {
+          "label": "Operating Expense",
+          "amount": 56934,
+          "firm": true
+        },
+        {
+          "label": "Benefits",
+          "amount": 28497,
+          "firm": true
+        },
+        {
+          "label": "Club Office",
+          "amount": 22415,
+          "firm": true
+        },
+        {
+          "label": "Teaching Equipment",
+          "amount": 21512,
+          "firm": true
+        },
+        {
+          "label": "Auto & Travel",
+          "amount": 21131,
+          "firm": true
+        },
+        {
+          "label": "Food & Entertainment",
+          "amount": 13303,
+          "firm": true
+        },
+        {
+          "label": "Washroom Pumping",
+          "amount": 12836,
+          "firm": true
+        },
+        {
+          "label": "Refunds",
+          "amount": 12129,
+          "firm": true
+        },
+        {
+          "label": "Pro Shop",
+          "amount": 9431,
+          "firm": true
+        },
+        {
+          "label": "Banking Fees",
+          "amount": 71850,
+          "firm": true
+        },
+        {
+          "label": "Home Office",
+          "amount": 5048,
+          "firm": true
+        },
+        {
+          "label": "Clubhouse",
+          "amount": 2660,
+          "firm": true
+        },
+        {
+          "label": "Misc",
+          "amount": 6955,
+          "firm": true
+        },
+        {
+          "label": "M/C Fees",
+          "amount": 104,
+          "firm": true
+        },
+        {
+          "label": "Advertising",
+          "amount": 0,
+          "firm": true
+        },
+        {
+          "label": "Electrical",
+          "amount": 0,
+          "firm": true
+        }
+      ],
+      "buildBreakdown": [
+        {
+          "label": "Bubble",
+          "amount": 900000,
+          "firm": false
+        },
+        {
+          "label": "Grade Beam",
+          "amount": 125000,
+          "firm": false
+        },
+        {
+          "label": "Excavation / Asphalt",
+          "amount": 150000,
+          "firm": false
+        },
+        {
+          "label": "Clubhouse",
+          "amount": 150000,
+          "firm": false
+        },
+        {
+          "label": "Electrical (transformer)",
+          "amount": 30000,
+          "firm": false
+        },
+        {
+          "label": "Natural Gas Service",
+          "amount": 40000,
+          "firm": false
+        },
+        {
+          "label": "Water / Septic",
+          "amount": 40000,
+          "firm": false
+        },
+        {
+          "label": "Court Surface (Quartz)",
+          "amount": 100000,
+          "firm": false
+        },
+        {
+          "label": "Nets & Posts",
+          "amount": 20000,
+          "firm": false
+        },
+        {
+          "label": "Lighting",
+          "amount": 60000,
+          "firm": false
+        },
+        {
+          "label": "Parking (shared)",
+          "amount": 50000,
+          "firm": false
+        },
+        {
+          "label": "Pond",
+          "amount": 25000,
+          "firm": false
+        },
+        {
+          "label": "Contingency",
+          "amount": 60000,
+          "firm": false
+        }
+      ]
+    },
+    "B": {
+      "label": "8 Tennis Courts",
+      "courts": 8,
+      "fillRate": 100,
+      "revenue": 3093011,
+      "operatingCosts": 1955266,
+      "buildCost": 2201667,
+      "incomeBreakdown": [
+        {
+          "label": "Membership",
+          "amount": 470500,
+          "firm": false
+        },
+        {
+          "label": "Membership Upgrades",
+          "amount": 13168,
+          "firm": false
+        },
+        {
+          "label": "Junior Clinic",
+          "amount": 2096796,
+          "firm": false
+        },
+        {
+          "label": "Adult Clinic",
+          "amount": 60341,
+          "firm": false
+        },
+        {
+          "label": "Summer Camp",
+          "amount": 235347,
+          "firm": false
+        },
+        {
+          "label": "Guest / Pay-as-you-go",
+          "amount": 180248,
+          "firm": false
+        },
+        {
+          "label": "Pro Shop",
+          "amount": 18352,
+          "firm": false
+        },
+        {
+          "label": "Misc",
+          "amount": 18259,
+          "firm": false
+        }
+      ],
+      "opCostBreakdown": [
+        {
+          "label": "Staff",
+          "amount": 876737,
+          "firm": false
+        },
+        {
+          "label": "Deduction Remittance",
+          "amount": 273773,
+          "firm": false
+        },
+        {
+          "label": "Professional Services",
+          "amount": 250048,
+          "firm": false
+        },
+        {
+          "label": "Utilities",
+          "amount": 100445,
+          "firm": false
+        },
+        {
+          "label": "Maintenance",
+          "amount": 98359,
+          "firm": false
+        },
+        {
+          "label": "Operating Expense",
+          "amount": 75912,
+          "firm": false
+        },
+        {
+          "label": "Benefits",
+          "amount": 37996,
+          "firm": false
+        },
+        {
+          "label": "Club Office",
+          "amount": 22415,
+          "firm": false
+        },
+        {
+          "label": "Teaching Equipment",
+          "amount": 28683,
+          "firm": false
+        },
+        {
+          "label": "Auto & Travel",
+          "amount": 21131,
+          "firm": false
+        },
+        {
+          "label": "Food & Entertainment",
+          "amount": 13303,
+          "firm": false
+        },
+        {
+          "label": "Washroom Pumping",
+          "amount": 17115,
+          "firm": false
+        },
+        {
+          "label": "Refunds",
+          "amount": 16172,
+          "firm": false
+        },
+        {
+          "label": "Pro Shop",
+          "amount": 12575,
+          "firm": false
+        },
+        {
+          "label": "Banking Fees",
+          "amount": 95800,
+          "firm": false
+        },
+        {
+          "label": "Home Office",
+          "amount": 5048,
+          "firm": false
+        },
+        {
+          "label": "Clubhouse",
+          "amount": 2660,
+          "firm": false
+        },
+        {
+          "label": "Misc",
+          "amount": 6955,
+          "firm": false
+        },
+        {
+          "label": "M/C Fees",
+          "amount": 139,
+          "firm": false
+        },
+        {
+          "label": "Advertising",
+          "amount": 0,
+          "firm": false
+        },
+        {
+          "label": "Electrical",
+          "amount": 0,
+          "firm": false
+        }
+      ],
+      "buildBreakdown": [
+        {
+          "label": "Bubble",
+          "amount": 1200000,
+          "firm": false
+        },
+        {
+          "label": "Grade Beam",
+          "amount": 166667,
+          "firm": false
+        },
+        {
+          "label": "Excavation / Asphalt",
+          "amount": 200000,
+          "firm": false
+        },
+        {
+          "label": "Clubhouse",
+          "amount": 150000,
+          "firm": false
+        },
+        {
+          "label": "Electrical (transformer)",
+          "amount": 30000,
+          "firm": false
+        },
+        {
+          "label": "Natural Gas Service",
+          "amount": 40000,
+          "firm": false
+        },
+        {
+          "label": "Water / Septic",
+          "amount": 40000,
+          "firm": false
+        },
+        {
+          "label": "Court Surface (Quartz)",
+          "amount": 133333,
+          "firm": false
+        },
+        {
+          "label": "Nets & Posts",
+          "amount": 26667,
+          "firm": false
+        },
+        {
+          "label": "Lighting",
+          "amount": 80000,
+          "firm": false
+        },
+        {
+          "label": "Parking (shared)",
+          "amount": 50000,
+          "firm": false
+        },
+        {
+          "label": "Pond",
+          "amount": 25000,
+          "firm": false
+        },
+        {
+          "label": "Contingency",
+          "amount": 60000,
+          "firm": false
+        }
+      ]
+    },
+    "C": {
+      "label": "10 Tennis Courts",
+      "courts": 10,
+      "fillRate": 88,
+      "revenue": 3402311,
+      "operatingCosts": 2363691,
+      "buildCost": 2653333,
+      "incomeBreakdown": [
+        {
+          "label": "Membership",
+          "amount": 588125,
+          "firm": false
+        },
+        {
+          "label": "Membership Upgrades",
+          "amount": 16460,
+          "firm": false
+        },
+        {
+          "label": "Junior Clinic",
+          "amount": 2620995,
+          "firm": false
+        },
+        {
+          "label": "Adult Clinic",
+          "amount": 75427,
+          "firm": false
+        },
+        {
+          "label": "Summer Camp",
+          "amount": 294183,
+          "firm": false
+        },
+        {
+          "label": "Guest / Pay-as-you-go",
+          "amount": 225310,
+          "firm": false
+        },
+        {
+          "label": "Pro Shop",
+          "amount": 22940,
+          "firm": false
+        },
+        {
+          "label": "Misc",
+          "amount": 22823,
+          "firm": false
+        }
+      ],
+      "opCostBreakdown": [
+        {
+          "label": "Staff",
+          "amount": 1095922,
+          "firm": false
+        },
+        {
+          "label": "Deduction Remittance",
+          "amount": 342217,
+          "firm": false
+        },
+        {
+          "label": "Professional Services",
+          "amount": 250048,
+          "firm": false
+        },
+        {
+          "label": "Utilities",
+          "amount": 125557,
+          "firm": false
+        },
+        {
+          "label": "Maintenance",
+          "amount": 122948,
+          "firm": false
+        },
+        {
+          "label": "Operating Expense",
+          "amount": 94890,
+          "firm": false
+        },
+        {
+          "label": "Benefits",
+          "amount": 47495,
+          "firm": false
+        },
+        {
+          "label": "Club Office",
+          "amount": 22415,
+          "firm": false
+        },
+        {
+          "label": "Teaching Equipment",
+          "amount": 35853,
+          "firm": false
+        },
+        {
+          "label": "Auto & Travel",
+          "amount": 21131,
+          "firm": false
+        },
+        {
+          "label": "Food & Entertainment",
+          "amount": 13303,
+          "firm": false
+        },
+        {
+          "label": "Washroom Pumping",
+          "amount": 21393,
+          "firm": false
+        },
+        {
+          "label": "Refunds",
+          "amount": 20215,
+          "firm": false
+        },
+        {
+          "label": "Pro Shop",
+          "amount": 15718,
+          "firm": false
+        },
+        {
+          "label": "Banking Fees",
+          "amount": 119750,
+          "firm": false
+        },
+        {
+          "label": "Home Office",
+          "amount": 5048,
+          "firm": false
+        },
+        {
+          "label": "Clubhouse",
+          "amount": 2660,
+          "firm": false
+        },
+        {
+          "label": "Misc",
+          "amount": 6955,
+          "firm": false
+        },
+        {
+          "label": "M/C Fees",
+          "amount": 173,
+          "firm": false
+        },
+        {
+          "label": "Advertising",
+          "amount": 0,
+          "firm": false
+        },
+        {
+          "label": "Electrical",
+          "amount": 0,
+          "firm": false
+        }
+      ],
+      "buildBreakdown": [
+        {
+          "label": "Bubble",
+          "amount": 1500000,
+          "firm": false
+        },
+        {
+          "label": "Grade Beam",
+          "amount": 208333,
+          "firm": false
+        },
+        {
+          "label": "Excavation / Asphalt",
+          "amount": 250000,
+          "firm": false
+        },
+        {
+          "label": "Clubhouse",
+          "amount": 150000,
+          "firm": false
+        },
+        {
+          "label": "Electrical (transformer)",
+          "amount": 30000,
+          "firm": false
+        },
+        {
+          "label": "Natural Gas Service",
+          "amount": 40000,
+          "firm": false
+        },
+        {
+          "label": "Water / Septic",
+          "amount": 40000,
+          "firm": false
+        },
+        {
+          "label": "Court Surface (Quartz)",
+          "amount": 166667,
+          "firm": false
+        },
+        {
+          "label": "Nets & Posts",
+          "amount": 33333,
+          "firm": false
+        },
+        {
+          "label": "Lighting",
+          "amount": 100000,
+          "firm": false
+        },
+        {
+          "label": "Parking (shared)",
+          "amount": 50000,
+          "firm": false
+        },
+        {
+          "label": "Pond",
+          "amount": 25000,
+          "firm": false
+        },
+        {
+          "label": "Contingency",
+          "amount": 60000,
+          "firm": false
+        }
+      ]
+    },
+    "D": {
+      "label": "12 Tennis Courts",
+      "courts": 12,
+      "fillRate": 78,
+      "revenue": 3618822,
+      "operatingCosts": 2772118,
+      "buildCost": 3105000,
+      "incomeBreakdown": [
+        {
+          "label": "Membership",
+          "amount": 705750,
+          "firm": false
+        },
+        {
+          "label": "Membership Upgrades",
+          "amount": 19752,
+          "firm": false
+        },
+        {
+          "label": "Junior Clinic",
+          "amount": 3145194,
+          "firm": false
+        },
+        {
+          "label": "Adult Clinic",
+          "amount": 90512,
+          "firm": false
+        },
+        {
+          "label": "Summer Camp",
+          "amount": 353020,
+          "firm": false
+        },
+        {
+          "label": "Guest / Pay-as-you-go",
+          "amount": 270372,
+          "firm": false
+        },
+        {
+          "label": "Pro Shop",
+          "amount": 27528,
+          "firm": false
+        },
+        {
+          "label": "Misc",
+          "amount": 27388,
+          "firm": false
+        }
+      ],
+      "opCostBreakdown": [
+        {
+          "label": "Staff",
+          "amount": 1315106,
+          "firm": false
+        },
+        {
+          "label": "Deduction Remittance",
+          "amount": 410660,
+          "firm": false
+        },
+        {
+          "label": "Professional Services",
+          "amount": 250048,
+          "firm": false
+        },
+        {
+          "label": "Utilities",
+          "amount": 150668,
+          "firm": false
+        },
+        {
+          "label": "Maintenance",
+          "amount": 147538,
+          "firm": false
+        },
+        {
+          "label": "Operating Expense",
+          "amount": 113868,
+          "firm": false
+        },
+        {
+          "label": "Benefits",
+          "amount": 56994,
+          "firm": false
+        },
+        {
+          "label": "Club Office",
+          "amount": 22415,
+          "firm": false
+        },
+        {
+          "label": "Teaching Equipment",
+          "amount": 43024,
+          "firm": false
+        },
+        {
+          "label": "Auto & Travel",
+          "amount": 21131,
+          "firm": false
+        },
+        {
+          "label": "Food & Entertainment",
+          "amount": 13303,
+          "firm": false
+        },
+        {
+          "label": "Washroom Pumping",
+          "amount": 25672,
+          "firm": false
+        },
+        {
+          "label": "Refunds",
+          "amount": 24258,
+          "firm": false
+        },
+        {
+          "label": "Pro Shop",
+          "amount": 18862,
+          "firm": false
+        },
+        {
+          "label": "Banking Fees",
+          "amount": 143700,
+          "firm": false
+        },
+        {
+          "label": "Home Office",
+          "amount": 5048,
+          "firm": false
+        },
+        {
+          "label": "Clubhouse",
+          "amount": 2660,
+          "firm": false
+        },
+        {
+          "label": "Misc",
+          "amount": 6955,
+          "firm": false
+        },
+        {
+          "label": "M/C Fees",
+          "amount": 208,
+          "firm": false
+        },
+        {
+          "label": "Advertising",
+          "amount": 0,
+          "firm": false
+        },
+        {
+          "label": "Electrical",
+          "amount": 0,
+          "firm": false
+        }
+      ],
+      "buildBreakdown": [
+        {
+          "label": "Bubble",
+          "amount": 1800000,
+          "firm": false
+        },
+        {
+          "label": "Grade Beam",
+          "amount": 250000,
+          "firm": false
+        },
+        {
+          "label": "Excavation / Asphalt",
+          "amount": 300000,
+          "firm": false
+        },
+        {
+          "label": "Clubhouse",
+          "amount": 150000,
+          "firm": false
+        },
+        {
+          "label": "Electrical (transformer)",
+          "amount": 30000,
+          "firm": false
+        },
+        {
+          "label": "Natural Gas Service",
+          "amount": 40000,
+          "firm": false
+        },
+        {
+          "label": "Water / Septic",
+          "amount": 40000,
+          "firm": false
+        },
+        {
+          "label": "Court Surface (Quartz)",
+          "amount": 200000,
+          "firm": false
+        },
+        {
+          "label": "Nets & Posts",
+          "amount": 40000,
+          "firm": false
+        },
+        {
+          "label": "Lighting",
+          "amount": 120000,
+          "firm": false
+        },
+        {
+          "label": "Parking (shared)",
+          "amount": 50000,
+          "firm": false
+        },
+        {
+          "label": "Pond",
+          "amount": 25000,
+          "firm": false
+        },
+        {
+          "label": "Contingency",
+          "amount": 60000,
+          "firm": false
+        }
+      ]
+    },
+    "P": {
+      "label": "Pickleball \u2014 Coming Soon",
+      "revenue": 0,
+      "operatingCosts": 0,
+      "buildCost": 0,
+      "incomeBreakdown": [],
+      "opCostBreakdown": [],
+      "buildBreakdown": []
+    }
   },
-  "partnerEquity": {"partnerCapital": 0, "structure": "Preferred Return + Equity Split", "preferredReturn": 8, "craigEquity": 70, "partnerEquity": 30}
+  "partnerEquity": {
+    "partnerCapital": 0,
+    "structure": "Preferred Return + Equity Split",
+    "preferredReturn": 8,
+    "craigEquity": 70,
+    "partnerEquity": 30
+  }
 }

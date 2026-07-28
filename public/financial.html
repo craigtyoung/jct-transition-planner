@@ -9,12 +9,16 @@
 <style>
   .bd-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
   .bd-row .bd-label{flex:1;padding:8px 10px;border:1px solid var(--gray-200,#e2e8f0);border-radius:8px;font-size:14px}
-  .bd-row .bd-amt{width:190px}
+  .bd-row .bd-amt{width:170px}
+  .bd-firm{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--gray-500,#64748b);white-space:nowrap;cursor:pointer;user-select:none}
+  .bd-firm input{width:16px;height:16px;accent-color:var(--green,#16a34a);cursor:pointer}
   .bd-remove{border:none;background:transparent;color:var(--gray-500,#64748b);cursor:pointer;font-size:14px;padding:6px 8px;border-radius:6px;line-height:1}
   .bd-remove:hover{background:var(--gray-50,#f1f5f9);color:var(--red,#dc2626)}
   .bd-foot{display:flex;align-items:center;justify-content:space-between;margin-top:12px;flex-wrap:wrap;gap:10px}
   .bd-total{font-size:14px;color:var(--gray-500,#64748b)}
   .bd-total strong{color:var(--navy,#0f2540);font-size:16px;margin-left:6px}
+  .bd-firmcount{font-size:12px;color:var(--gray-500,#64748b);margin-left:14px}
+  .bd-firmcount b{color:var(--green,#16a34a)}
   .bd-btn{border:1px solid var(--navy,#0f2540);background:#fff;color:var(--navy,#0f2540);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer}
   .bd-btn:hover{background:var(--navy,#0f2540);color:#fff}
   .bd-clear{margin-top:12px;border:none;background:transparent;color:var(--gray-500,#64748b);font-size:12px;text-decoration:underline;cursor:pointer;padding:0}
@@ -52,7 +56,7 @@
 
   <div class="page-header">
     <div class="page-title">Financial Model</div>
-    <div class="page-subtitle">Interactive pro forma — court model drives revenue &amp; costs, calculations update in real time</div>
+    <div class="page-subtitle">Itemized income, operating &amp; build costs per configuration — check a line as firm once it's confirmed</div>
   </div>
 
   <!-- Court Configuration Selector -->
@@ -66,7 +70,7 @@
       <button class="config-tab" data-key="P" onclick="selectConfig('P')" title="Not modelled yet">Pickleball — Coming Soon</button>
     </div>
 
-    <!-- Court Model: fill-rate lever -->
+    <!-- Court Model: fill-rate lever scales income -->
     <div class="cm-wrap" id="court-model">
       <div class="cm-top">
         <div class="cm-courts">Tennis courts: <strong id="cm-courts">6</strong></div>
@@ -77,40 +81,59 @@
         </div>
       </div>
       <div class="cm-readout">
-        <div class="cm-stat">Revenue<b id="cm-rev">—</b></div>
+        <div class="cm-stat">Revenue (income × fill)<b id="cm-rev">—</b></div>
         <div class="cm-stat">Operating costs<b id="cm-opc">—</b></div>
-        <div class="cm-stat">Operating profit<b id="cm-op-profit" style="color:var(--green)">—</b></div>
+        <div class="cm-stat">Op. profit (before land + financing)<b id="cm-op-profit" style="color:var(--green)">—</b></div>
       </div>
-      <div class="cm-note" id="cm-note">
-        Revenue and operating costs are computed from <strong>courts × fill rate</strong> using the real 6-court actuals
-        ($386.6K revenue/court at 100% fill). Slide the fill rate to model demand. Operating costs exclude land lease
-        (handled below as land sublease) and bubble financing (handled as debt service).
+      <div class="cm-note">
+        The <strong>Income</strong> breakdown below is the full-capacity (100%) figure for this court count. The
+        <strong>fill rate</strong> slider scales revenue down to model demand. Operating cost and build cost come
+        straight from their itemized panels. Operating cost excludes land lease (handled below as land sublease)
+        and bubble financing (handled as debt service).
       </div>
     </div>
 
     <div class="grid-3 gap-20">
       <div class="input-group">
-        <label>Revenue for Selected Config ($) — computed</label>
+        <label>Revenue ($) — income × fill</label>
         <div class="input-prefix"><span class="prefix">$</span>
-          <input type="text" id="cfg-revenue" readonly style="background:var(--gray-50);cursor:not-allowed" title="Computed from the court model above">
+          <input type="text" id="cfg-revenue" readonly style="background:var(--gray-50);cursor:not-allowed" title="Income breakdown × fill rate">
         </div>
       </div>
       <div class="input-group">
-        <label>Operating Costs for Selected Config ($) — computed</label>
+        <label>Operating Costs ($) — from breakdown</label>
         <div class="input-prefix"><span class="prefix">$</span>
-          <input type="text" id="cfg-opcosts" readonly style="background:var(--gray-50);cursor:not-allowed" title="Computed from the court model above">
+          <input type="text" id="cfg-opcosts" readonly style="background:var(--gray-50);cursor:not-allowed" title="From the operating cost breakdown">
         </div>
       </div>
       <div class="input-group">
-        <label>Build Cost for Selected Config ($)</label>
+        <label>Build Cost ($) — from breakdown</label>
         <div class="input-prefix"><span class="prefix">$</span>
-          <input type="text" id="cfg-buildcost" oninput="onConfigValueChange()" onfocus="fmtFocus(this)" onblur="fmtBlur(this,onConfigValueChange)">
+          <input type="text" id="cfg-buildcost" readonly style="background:var(--gray-50);cursor:not-allowed" title="From the build cost breakdown">
         </div>
       </div>
     </div>
 
-    <!-- Build Cost itemized breakdown (collapsible) -->
+    <!-- Itemized Breakdowns: Income · Operating Costs · Build Cost -->
     <div class="section" style="margin-top:16px">
+      <div class="collapsible-header" onclick="toggleBreakdown('income', this)">
+        <div class="card-title" style="margin-bottom:0">Income Breakdown <span id="bd-label-income" style="color:var(--gray-500);font-weight:500;font-size:13px"></span></div>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="collapsible-body" id="breakdown-body-income">
+        <div id="breakdown-content-income" style="padding-top:14px"></div>
+      </div>
+    </div>
+    <div class="section" style="margin-top:12px">
+      <div class="collapsible-header" onclick="toggleBreakdown('opcosts', this)">
+        <div class="card-title" style="margin-bottom:0">Operating Cost Breakdown <span id="bd-label-opcosts" style="color:var(--gray-500);font-weight:500;font-size:13px"></span></div>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="collapsible-body" id="breakdown-body-opcosts">
+        <div id="breakdown-content-opcosts" style="padding-top:14px"></div>
+      </div>
+    </div>
+    <div class="section" style="margin-top:12px">
       <div class="collapsible-header" onclick="toggleBreakdown('build', this)">
         <div class="card-title" style="margin-bottom:0">Build Cost Breakdown <span id="bd-label-build" style="color:var(--gray-500);font-weight:500;font-size:13px"></span></div>
         <span class="chevron">▶</span>
@@ -154,9 +177,9 @@
       <div class="card">
         <div class="card-title">New Site</div>
         <div class="input-group">
-          <label>Build Cost ($)</label>
+          <label>Build Cost ($) — from breakdown above</label>
           <div class="input-prefix"><span class="prefix">$</span>
-            <input type="text" id="new-buildcost" oninput="onBuildCostChange()" onfocus="fmtFocus(this)" onblur="fmtBlur(this,onBuildCostChange)">
+            <input type="text" id="new-buildcost" readonly style="background:var(--gray-50);cursor:not-allowed" title="From the build cost breakdown above">
           </div>
         </div>
         <div class="input-group">
@@ -355,39 +378,14 @@
 let model = {};
 let saveTimer = null;
 
-// Per-court unit economics, derived from the real 6-court 2025/26 actuals.
-// revenue $2,319,758 / 6 = $386,626 per court at 100% fill.
-// Operating costs EXCLUDE land lease (pro forma subtracts land sublease separately)
-// and EXCLUDE bubble financing (handled as debt service).
-const COURT_ECON = {
-  revPerCourt:   386626,  // revenue per court at 100% fill
-  varPerCourt:   163167,  // coaching + program cost per court — scales with fill (utilisation)
-  facPerCourt:   26990,   // utilities/maintenance per court — scales with court count (built capacity)
-  fixedOverhead: 405900   // admin, accounting, Victor base, insurance — flat, independent of courts
-};
-
-function computeFromCourts(courts, fillRate) {
-  const f = (Number(fillRate) || 0) / 100;
-  const revenue = Math.round(courts * COURT_ECON.revPerCourt * f);
-  const operatingCosts = Math.round(
-    courts * COURT_ECON.varPerCourt * f +  // variable: scales with utilisation
-    courts * COURT_ECON.facPerCourt +      // facility: scales with court count
-    COURT_ECON.fixedOverhead               // fixed overhead
-  );
-  return { revenue, operatingCosts };
-}
-
 async function load() {
   const res = await fetch('/api/financial-model');
   model = await res.json();
 
-  // Current site
   document.getElementById('cur-revenue').value = model.currentSite.annualRevenue.toLocaleString('en-CA');
   document.getElementById('cur-opcosts').value = model.currentSite.operatingCosts.toLocaleString('en-CA');
   document.getElementById('cur-lease').value   = model.currentSite.annualLease.toLocaleString('en-CA');
 
-  // New site
-  document.getElementById('new-buildcost').value = model.newSite.buildCost.toLocaleString('en-CA');
   document.getElementById('new-downpmt').value   = model.newSite.downPayment.toLocaleString('en-CA');
   document.getElementById('new-rate').value      = model.newSite.interestRate;
   document.getElementById('new-term').value      = model.newSite.loanTermYears;
@@ -396,7 +394,6 @@ async function load() {
   document.getElementById('new-sublease').value  = model.newSite.annualLandSublease.toLocaleString('en-CA');
   document.getElementById('new-maintsav').value  = model.newSite.maintenanceSavings.toLocaleString('en-CA');
 
-  // Partner equity
   const pe = model.partnerEquity;
   document.getElementById('pe-capital').value   = (pe.partnerCapital || 0).toLocaleString('en-CA');
   document.getElementById('pe-structure').value = pe.structure;
@@ -422,69 +419,60 @@ function selectConfig(key, doSave = true) {
 
   const cm = document.getElementById('court-model');
   if (cfg && cfg.courts) {
-    // Tennis court-model config: fill lever drives revenue + opcost
     cm.style.display = '';
     document.getElementById('cm-courts').textContent = cfg.courts;
     document.getElementById('cm-fill').value = cfg.fillRate;
     document.getElementById('cm-fill-val').textContent = cfg.fillRate + '%';
-    applyCourtModel(key); // computes + writes revenue/opcost into cfg + inputs
   } else {
-    // Non-court config (e.g. Pickleball placeholder): hide the lever
     cm.style.display = 'none';
-    document.getElementById('cfg-revenue').value = (cfg && cfg.revenue ? cfg.revenue : 0).toLocaleString('en-CA');
-    document.getElementById('cfg-opcosts').value = (cfg && cfg.operatingCosts ? cfg.operatingCosts : 0).toLocaleString('en-CA');
   }
 
-  document.getElementById('cfg-buildcost').value = (cfg && cfg.buildCost ? cfg.buildCost : 0).toLocaleString('en-CA');
-  document.getElementById('new-buildcost').value = (cfg && cfg.buildCost ? cfg.buildCost : 0).toLocaleString('en-CA');
   document.getElementById('config-label-display').textContent = cfg ? cfg.label : '—';
+  renderBreakdown('income');
+  renderBreakdown('opcosts');
   renderBreakdown('build');
+  refreshConfig();
   recalc();
   if (doSave) schedSave();
 }
 
-// Recompute revenue + operating costs for the selected court config from courts × fill.
-function applyCourtModel(key) {
-  const cfg = model.configurations[key];
-  if (!cfg || !cfg.courts) return;
-  const out = computeFromCourts(cfg.courts, cfg.fillRate);
-  cfg.revenue = out.revenue;
-  cfg.operatingCosts = out.operatingCosts;
-  document.getElementById('cfg-revenue').value = out.revenue.toLocaleString('en-CA');
-  document.getElementById('cfg-opcosts').value = out.operatingCosts.toLocaleString('en-CA');
-  const profit = out.revenue - out.operatingCosts;
-  document.getElementById('cm-rev').textContent = fmt(out.revenue);
-  document.getElementById('cm-opc').textContent = fmt(out.operatingCosts);
-  const pEl = document.getElementById('cm-op-profit');
-  pEl.textContent = fmt(profit);
-  pEl.style.color = profit >= 0 ? 'var(--green)' : 'var(--red)';
+// Recompute the selected config's revenue / operatingCosts / buildCost from its breakdowns,
+// applying the fill rate to income. Updates the display fields + court-model readout.
+function refreshConfig() {
+  const cfg = model.configurations[model.selectedConfig];
+  if (!cfg) return;
+  const incomeTotal = breakdownTotal(cfg.incomeBreakdown);
+  const opcTotal    = breakdownTotal(cfg.opCostBreakdown);
+  const buildTotal  = breakdownTotal(cfg.buildBreakdown);
+  const fill = cfg.courts ? (Number(cfg.fillRate) || 0) / 100 : 1;
+
+  cfg.revenue        = Math.round(incomeTotal * fill);
+  cfg.operatingCosts = opcTotal;
+  cfg.buildCost      = buildTotal;
+
+  document.getElementById('cfg-revenue').value   = cfg.revenue.toLocaleString('en-CA');
+  document.getElementById('cfg-opcosts').value   = cfg.operatingCosts.toLocaleString('en-CA');
+  document.getElementById('cfg-buildcost').value = cfg.buildCost.toLocaleString('en-CA');
+  document.getElementById('new-buildcost').value = cfg.buildCost.toLocaleString('en-CA');
+
+  if (cfg.courts) {
+    const profit = cfg.revenue - cfg.operatingCosts;
+    document.getElementById('cm-rev').textContent = fmt(cfg.revenue);
+    document.getElementById('cm-opc').textContent = fmt(cfg.operatingCosts);
+    const pEl = document.getElementById('cm-op-profit');
+    pEl.textContent = fmt(profit);
+    pEl.style.color = profit >= 0 ? 'var(--green)' : 'var(--red)';
+  }
 }
 
 function onFillChange(val) {
-  const key = model.selectedConfig;
-  const cfg = model.configurations[key];
+  const cfg = model.configurations[model.selectedConfig];
   if (!cfg || !cfg.courts) return;
   cfg.fillRate = Number(val) || 0;
   document.getElementById('cm-fill-val').textContent = cfg.fillRate + '%';
-  applyCourtModel(key);
+  refreshConfig();
   recalc();
   schedSave();
-}
-
-function onConfigValueChange() {
-  const key = model.selectedConfig;
-  model.configurations[key].buildCost = numVal('cfg-buildcost');
-  document.getElementById('new-buildcost').value = numVal('cfg-buildcost').toLocaleString('en-CA');
-  recalc();
-  schedSave();
-}
-
-function onBuildCostChange() {
-  const key = model.selectedConfig;
-  const val = numVal('new-buildcost');
-  model.configurations[key].buildCost = val;
-  document.getElementById('cfg-buildcost').value = val ? val.toLocaleString('en-CA') : '';
-  recalc();
 }
 
 function getInputs() {
@@ -624,11 +612,19 @@ function togglePartner(header) {
   document.getElementById('partner-body').classList.toggle('open');
 }
 
-// ---- Build Cost itemized breakdown (collapsible, opt-in) ----
+// ---- Itemized Breakdowns (per-config, collapsible, with firm flags) ----
 const BREAKDOWN_KINDS = {
+  income: {
+    arr: 'incomeBreakdown', noun: 'Income',
+    defaults: ['Membership', 'Membership Upgrades', 'Junior Clinic', 'Adult Clinic', 'Summer Camp', 'Guest / Pay-as-you-go', 'Pro Shop', 'Misc']
+  },
+  opcosts: {
+    arr: 'opCostBreakdown', noun: 'Operating Costs',
+    defaults: ['Staff', 'Deduction Remittance', 'Benefits', 'Professional Services', 'Utilities', 'Maintenance', 'Operating Expense', 'Banking Fees', 'Club Office', 'Teaching Equipment', 'Auto & Travel', 'Food & Entertainment', 'Washroom Pumping', 'Pro Shop', 'Home Office', 'Clubhouse', 'Misc', 'Advertising']
+  },
   build: {
-    arr: 'buildBreakdown', field: 'buildCost', inputs: ['cfg-buildcost', 'new-buildcost'], noun: 'Build Cost',
-    defaults: ['Bubble', 'Grade Beam', 'Clubhouse', 'Install', 'Court Surface (Quartz)', 'Nets']
+    arr: 'buildBreakdown', noun: 'Build Cost',
+    defaults: ['Bubble', 'Grade Beam', 'Excavation / Asphalt', 'Clubhouse', 'Electrical (transformer)', 'Natural Gas Service', 'Water / Septic', 'Court Surface (Quartz)', 'Nets & Posts', 'Lighting', 'Parking (shared)', 'Pond', 'Contingency']
   }
 };
 
@@ -638,22 +634,11 @@ function escapeAttr(s) {
 function breakdownTotal(items) {
   return (items || []).reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
 }
+function firmCount(items) {
+  return (items || []).filter(i => i.firm).length;
+}
 function bdItems(kind) {
   return model.configurations[model.selectedConfig][BREAKDOWN_KINDS[kind].arr];
-}
-function setFieldInputs(kind, val) {
-  const s = val ? Number(val).toLocaleString('en-CA') : '';
-  BREAKDOWN_KINDS[kind].inputs.forEach(id => { const el = document.getElementById(id); if (el) el.value = s; });
-}
-function setFieldReadonly(kind, ro) {
-  BREAKDOWN_KINDS[kind].inputs.forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.readOnly = ro;
-    el.style.background = ro ? 'var(--gray-50)' : '';
-    el.style.cursor = ro ? 'not-allowed' : '';
-    el.title = ro ? 'Calculated from the breakdown below' : '';
-  });
 }
 
 function toggleBreakdown(kind, header) {
@@ -670,40 +655,38 @@ function renderBreakdown(kind) {
 
   const items = cfg[BREAKDOWN_KINDS[kind].arr];
   if (!items || items.length === 0) {
-    setFieldReadonly(kind, false);
     box.innerHTML =
-      `<div style="color:var(--gray-500);font-size:13px;margin-bottom:12px">No itemized breakdown for this configuration. ${BREAKDOWN_KINDS[kind].noun} is entered manually above.</div>` +
+      `<div style="color:var(--gray-500);font-size:13px;margin-bottom:12px">No itemized ${BREAKDOWN_KINDS[kind].noun.toLowerCase()} for this configuration yet.</div>` +
       `<button class="bd-btn" onclick="startBreakdown('${kind}')">+ Start itemized breakdown</button>`;
     return;
   }
 
-  setFieldReadonly(kind, true);
   const rows = items.map((it, idx) => `
     <div class="bd-row">
       <input class="bd-label" type="text" value="${escapeAttr(it.label)}" placeholder="Item" oninput="editBreakdown('${kind}',${idx},'label',this.value)">
       <div class="input-prefix bd-amt"><span class="prefix">$</span>
         <input type="text" value="${it.amount ? Number(it.amount).toLocaleString('en-CA') : ''}" placeholder="0" oninput="editBreakdown('${kind}',${idx},'amount',this.value)" onfocus="fmtFocus(this)" onblur="fmtBlur(this)">
       </div>
+      <label class="bd-firm" title="Check when this figure is confirmed / quoted"><input type="checkbox" ${it.firm ? 'checked' : ''} onchange="toggleFirm('${kind}',${idx},this.checked)">firm</label>
       <button class="bd-remove" title="Remove line" onclick="removeBreakdown('${kind}',${idx})">✕</button>
     </div>`).join('');
   box.innerHTML = `
     <div class="bd-list">${rows}</div>
     <div class="bd-foot">
       <button class="bd-btn" onclick="addBreakdown('${kind}')">+ Add line</button>
-      <div class="bd-total">Total ${BREAKDOWN_KINDS[kind].noun.toLowerCase()}: <strong id="bd-total-${kind}">${fmt(breakdownTotal(items))}</strong></div>
+      <div class="bd-total">Total ${BREAKDOWN_KINDS[kind].noun.toLowerCase()}: <strong id="bd-total-${kind}">${fmt(breakdownTotal(items))}</strong>
+        <span class="bd-firmcount" id="bd-firm-${kind}"><b>${firmCount(items)}</b> of ${items.length} firm</span>
+      </div>
     </div>
-    <button class="bd-clear" onclick="clearBreakdown('${kind}')">Clear breakdown · back to manual entry</button>`;
+    <button class="bd-clear" onclick="clearBreakdown('${kind}')">Clear breakdown</button>`;
 }
 
-function applyBreakdown(kind) {
-  const cfg = model.configurations[model.selectedConfig];
-  const K = BREAKDOWN_KINDS[kind];
-  const total = breakdownTotal(cfg[K.arr]);
-  cfg[K.field] = total;
-  setFieldInputs(kind, total);
+function updateFooter(kind) {
+  const items = bdItems(kind);
   const tv = document.getElementById('bd-total-' + kind);
-  if (tv) tv.textContent = fmt(total);
-  recalc();
+  if (tv) tv.textContent = fmt(breakdownTotal(items));
+  const fc = document.getElementById('bd-firm-' + kind);
+  if (fc) fc.innerHTML = `<b>${firmCount(items)}</b> of ${items.length} firm`;
 }
 
 function editBreakdown(kind, idx, field, value) {
@@ -711,40 +694,56 @@ function editBreakdown(kind, idx, field, value) {
   if (!items || !items[idx]) return;
   if (field === 'amount') items[idx].amount = parseFloat(String(value).replace(/[,$\s]/g, '')) || 0;
   else items[idx].label = value;
-  applyBreakdown(kind);
+  updateFooter(kind);
+  refreshConfig();
+  recalc();
+  schedSave();
+}
+
+function toggleFirm(kind, idx, checked) {
+  const items = bdItems(kind);
+  if (!items || !items[idx]) return;
+  items[idx].firm = !!checked;
+  updateFooter(kind);
+  schedSave();
 }
 
 function addBreakdown(kind) {
   const cfg = model.configurations[model.selectedConfig];
   const K = BREAKDOWN_KINDS[kind];
   if (!cfg[K.arr]) cfg[K.arr] = [];
-  cfg[K.arr].push({ label: '', amount: 0 });
+  cfg[K.arr].push({ label: '', amount: 0, firm: false });
   renderBreakdown(kind);
-  applyBreakdown(kind);
+  refreshConfig();
+  recalc();
+  schedSave();
 }
 
 function removeBreakdown(kind, idx) {
   const cfg = model.configurations[model.selectedConfig];
   cfg[BREAKDOWN_KINDS[kind].arr].splice(idx, 1);
   renderBreakdown(kind);
-  applyBreakdown(kind);
+  refreshConfig();
+  recalc();
+  schedSave();
 }
 
 function startBreakdown(kind) {
   const cfg = model.configurations[model.selectedConfig];
-  cfg[BREAKDOWN_KINDS[kind].arr] = BREAKDOWN_KINDS[kind].defaults.map(l => ({ label: l, amount: 0 }));
+  cfg[BREAKDOWN_KINDS[kind].arr] = BREAKDOWN_KINDS[kind].defaults.map(l => ({ label: l, amount: 0, firm: false }));
   renderBreakdown(kind);
-  applyBreakdown(kind);
+  refreshConfig();
+  recalc();
+  schedSave();
 }
 
 function clearBreakdown(kind) {
   const cfg = model.configurations[model.selectedConfig];
-  const K = BREAKDOWN_KINDS[kind];
-  const keep = cfg[K.field];
-  cfg[K.arr] = [];
+  cfg[BREAKDOWN_KINDS[kind].arr] = [];
   renderBreakdown(kind);
-  setFieldInputs(kind, keep);
+  refreshConfig();
   recalc();
+  schedSave();
 }
 
 function schedSave() {
