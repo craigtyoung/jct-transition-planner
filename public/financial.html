@@ -36,6 +36,10 @@
   .cm-stat{font-size:12px;color:var(--gray-500,#64748b)}
   .cm-stat b{display:block;font-size:18px;font-weight:800;margin-top:2px}
   .cm-note{font-size:12px;color:var(--gray-500,#64748b);margin-top:12px;line-height:1.5}
+  /* Hover tooltips */
+  .tip{display:inline-block;width:15px;height:15px;line-height:15px;text-align:center;border-radius:50%;background:var(--gray-200,#e2e8f0);color:var(--gray-500,#64748b);font-size:10px;font-weight:700;cursor:help;margin-left:5px;position:relative;font-style:normal}
+  .tip::after{content:attr(data-tip);position:absolute;left:50%;bottom:150%;transform:translateX(-50%);background:var(--navy,#0f2540);color:#fff;font-size:12px;font-weight:400;line-height:1.45;padding:9px 11px;border-radius:8px;width:250px;white-space:normal;text-align:left;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s;z-index:30;box-shadow:0 6px 18px rgba(0,0,0,.2)}
+  .tip:hover::after{opacity:1;visibility:visible}
 </style>
 </head>
 <body>
@@ -75,7 +79,7 @@
       <div class="cm-top">
         <div class="cm-courts">Tennis courts: <strong id="cm-courts">6</strong></div>
         <div class="cm-fillbox">
-          <label>Fill rate</label>
+          <label>Fill rate<span class="tip" data-tip="How full the teaching courts run. 100% = fully booked (you're near this now, with waiting lists). Scales income up or down to model demand.">i</span></label>
           <input type="range" id="cm-fill" min="40" max="100" step="1" value="100" oninput="onFillChange(this.value)">
           <span class="cm-fillval" id="cm-fill-val">100%</span>
         </div>
@@ -83,7 +87,7 @@
       <div class="cm-readout">
         <div class="cm-stat">Revenue (income × fill)<b id="cm-rev">—</b></div>
         <div class="cm-stat">Operating costs<b id="cm-opc">—</b></div>
-        <div class="cm-stat">Op. profit (before land + financing)<b id="cm-op-profit" style="color:var(--green)">—</b></div>
+        <div class="cm-stat">Op. profit (before land + financing)<span class="tip" data-tip="Revenue minus operating costs. BEFORE land lease and bubble financing — those are applied in the pro forma table below.">i</span><b id="cm-op-profit" style="color:var(--green)">—</b></div>
       </div>
       <div class="cm-note">
         The <strong>Income</strong> breakdown below is the full-capacity (100%) figure for this court count. The
@@ -151,25 +155,25 @@
       <div class="card" style="margin-bottom:16px">
         <div class="card-title">Current Site</div>
         <div class="input-group">
-          <label>Annual Revenue ($)</label>
+          <label>Annual Revenue ($)<span class="tip" data-tip="Total 2025/26 club income from all sources — membership, junior & adult academy, camps, guest fees, pro shop. Actual: $2,319,758.">i</span></label>
           <div class="input-prefix"><span class="prefix">$</span>
             <input type="text" id="cur-revenue" oninput="recalc()" onfocus="fmtFocus(this)" onblur="fmtBlur(this,recalc)">
           </div>
         </div>
         <div class="input-group">
-          <label>Operating Costs ($)</label>
+          <label>Operating Costs ($)<span class="tip" data-tip="All operating expenses EXCLUDING land lease (shown separately), income tax, and owner dividends. Includes every salary — Craig, Jaime and Victor.">i</span></label>
           <div class="input-prefix"><span class="prefix">$</span>
             <input type="text" id="cur-opcosts" oninput="recalc()" onfocus="fmtFocus(this)" onblur="fmtBlur(this,recalc)">
           </div>
         </div>
         <div class="input-group">
-          <label>Annual Lease ($)</label>
+          <label>Annual Lease ($)<span class="tip" data-tip="Current-site lease — land + bubble bundled ($169,500). At the new site this becomes a land-only sublease (~$100K) since you own the bubble.">i</span></label>
           <div class="input-prefix"><span class="prefix">$</span>
             <input type="text" id="cur-lease" oninput="recalc()" onfocus="fmtFocus(this)" onblur="fmtBlur(this,recalc)">
           </div>
         </div>
         <div style="background:var(--gray-50);padding:12px;border-radius:8px">
-          <span style="font-size:12px;color:var(--gray-500)">Current net profit (auto):</span>
+          <span style="font-size:12px;color:var(--gray-500)">Current net profit (auto):</span><span class="tip" data-tip="Operating profit BEFORE income tax (~$229K) and owner dividends (~$230K). All salaries already deducted. This is the cash the business generates to service financing — not take-home pay.">i</span>
           <span style="font-size:16px;font-weight:800;color:var(--green);margin-left:8px" id="cur-net">—</span>
         </div>
       </div>
@@ -183,7 +187,7 @@
           </div>
         </div>
         <div class="input-group">
-          <label>Down Payment ($)</label>
+          <label>Down Payment ($)<span class="tip" data-tip="Equity + grant paid up front: Victor $300K + JCT reserve (Craig/Jaime) $300K + Tennis Canada grant $200K = ~$800K.">i</span></label>
           <div class="input-prefix"><span class="prefix">$</span>
             <input type="text" id="new-downpmt" oninput="recalc()" onfocus="fmtFocus(this)" onblur="fmtBlur(this,recalc)">
           </div>
@@ -218,7 +222,7 @@
           </div>
         </div>
         <div class="input-group">
-          <label>Annual Land Sublease ($)</label>
+          <label>Annual Land Sublease ($)<span class="tip" data-tip="New-site land-only lease (~$100K/yr). Replaces the current bundled land+bubble lease since JCT owns/finances the bubble.">i</span></label>
           <div class="input-prefix"><span class="prefix">$</span>
             <input type="text" id="new-sublease" oninput="recalc()" onfocus="fmtFocus(this)" onblur="fmtBlur(this,recalc)">
           </div>
@@ -282,7 +286,7 @@
               <td class="right text-green" id="r-ms-21">—</td>
             </tr>
             <tr class="row-total">
-              <td>Net Profit</td>
+              <td>Net Profit<span class="tip" data-tip="Revenue − operating costs − debt service − land sublease + maintenance savings. Still BEFORE income tax and owner distributions.">i</span></td>
               <td class="right" id="r-net-1">—</td><td class="right" id="r-net-5">—</td>
               <td class="right" id="r-net-10">—</td><td class="right" id="r-net-20">—</td>
               <td class="right" id="r-net-21">—</td>
@@ -295,7 +299,7 @@
               <td class="right text-gray" style="font-size:11px" id="r-cum-21">—</td>
             </tr>
             <tr class="row-highlight">
-              <td>vs Current (<span id="vs-label">—</span>)</td>
+              <td>vs Current (<span id="vs-label">—</span>)<span class="tip" data-tip="This scenario's Year-by-year net profit compared to the current club's operating profit ($603K).">i</span></td>
               <td class="right" id="r-vs-1">—</td><td class="right" id="r-vs-5">—</td>
               <td class="right" id="r-vs-10">—</td><td class="right" id="r-vs-20">—</td>
               <td class="right" id="r-vs-21">—</td>
