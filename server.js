@@ -37,29 +37,67 @@ try {
   }
 } catch { /* non-fatal */ }
 
-// Site-wide password gate (HTTP Basic Auth). If SITE_PASSWORD is set (Railway),
-// every page and API call requires the shared login. Unset (local dev) = open.
+// Role-aware auth (HTTP Basic Auth). If SITE_PASSWORD is set (Railway), every
+// page and API call requires a login. Two roles:
+//   owner   (SITE_USER / SITE_PASSWORD)       — full read/write
+//   partner (PARTNER_USER / PARTNER_PASSWORD) — read-only, limited data
+// Unset SITE_PASSWORD (local dev) = open, treated as owner.
 const SITE_USER = process.env.SITE_USER || 'jct';
 const SITE_PASSWORD = process.env.SITE_PASSWORD;
+const PARTNER_USER = process.env.PARTNER_USER || 'partner';
+const PARTNER_PASSWORD = process.env.PARTNER_PASSWORD;
 if (SITE_PASSWORD) {
   app.use((req, res, next) => {
     const [scheme, encoded] = (req.headers.authorization || '').split(' ');
     if (scheme === 'Basic' && encoded) {
       const [user, pass] = Buffer.from(encoded, 'base64').toString().split(':');
-      if (user === SITE_USER && pass === SITE_PASSWORD) return next();
+      if (user === SITE_USER && pass === SITE_PASSWORD) { req.role = 'owner'; return next(); }
+      if (PARTNER_PASSWORD && user === PARTNER_USER && pass === PARTNER_PASSWORD) { req.role = 'partner'; return next(); }
     }
     res.set('WWW-Authenticate', 'Basic realm="JCT Transition Planner"');
     return res.status(401).send('Authentication required.');
   });
+} else {
+  app.use((req, res, next) => { req.role = 'owner'; next(); }); // local dev = full access
 }
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Report the caller's role so the client can adapt nav + controls.
+app.get('/api/whoami', (req, res) => res.json({ role: req.role || 'owner' }));
+
+// Which data a partner may read, and how each file is trimmed before sending.
+const PARTNER_READABLE = new Set(['build-plan', 'financial-model', 'context']);
+function filterForPartner(name, data) {
+  if (name === 'financial-model') {
+    // Build scope only — no income, operating costs, pro-forma, or financing.
+    const out = { selectedConfig: data.selectedConfig, configurations: {} };
+    for (const k in (data.configurations || {})) {
+      const c = data.configurations[k];
+      out.configurations[k] = { label: c.label, courts: c.courts, buildCost: c.buildCost, buildBreakdown: c.buildBreakdown || [] };
+    }
+    return out;
+  }
+  if (name === 'context') {
+    // Only contacts explicitly flagged shared.
+    return { groups: (data.groups || [])
+      .map(g => ({ id: g.id, title: g.title, contacts: (g.contacts || []).filter(ct => ct.shared) }))
+      .filter(g => g.contacts.length) };
+  }
+  return data;
+}
+// Treat as partner-scoped when it's a real partner login OR an owner explicitly
+// previewing (?as=partner) — so the preview shows exactly what a partner sees.
+function partnerScoped(req) {
+  return req.role === 'partner' || (req.role === 'owner' && req.query.as === 'partner');
+}
+
 // POST /api/chat — "Ask the Planner" assistant.
 // Proxies to the Anthropic API. The API key stays server-side (env var) and is
 // NEVER sent to the browser. Grounds every answer in the live planner JSON data.
 app.post('/api/chat', async (req, res) => {
+  if (partnerScoped(req)) return res.status(403).json({ error: 'The assistant is not available in the shared view.' });
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return res.status(503).json({
@@ -133,14 +171,19 @@ app.get('/api/:file', (req, res) => {
   }
   try {
     const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    if (partnerScoped(req)) {
+      if (!PARTNER_READABLE.has(name)) return res.status(403).json({ error: 'Not available in the shared view.' });
+      return res.json(filterForPartner(name, data));
+    }
     res.json(data);
   } catch {
     res.status(500).json({ error: 'Read error' });
   }
 });
 
-// POST /api/:file — write a JSON data file (open to anyone past the site gate)
+// POST /api/:file — write a JSON data file (owner only; partners are read-only)
 app.post('/api/:file', (req, res) => {
+  if (req.role === 'partner') return res.status(403).json({ error: 'Read-only access.' });
   const name = req.params.file.replace(/[^a-z0-9-]/gi, '');
   const filePath = path.join(DATA_DIR, `${name}.json`);
   try {
