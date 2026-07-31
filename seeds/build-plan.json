@@ -1,0 +1,30 @@
+{
+  "phases": [
+    { "id": "p1",  "track": "Approvals", "label": "Sign lease / sublease",              "start": "2026-09", "months": 2, "status": "Pending" },
+    { "id": "p2",  "track": "Approvals", "label": "Close financing",                     "start": "2026-10", "months": 2, "status": "Pending" },
+    { "id": "p3",  "track": "Approvals", "label": "Confirm structure (dome vs move)",    "start": "2026-11", "months": 3, "status": "Pending" },
+    { "id": "p4",  "track": "Approvals", "label": "Submit permits (Town + Region)",      "start": "2027-01", "months": 1, "status": "Pending" },
+    { "id": "p5",  "track": "Approvals", "label": "Permit approval window",              "start": "2027-02", "months": 3, "status": "Pending" },
+
+    { "id": "p6",  "track": "Site Work", "label": "Grade land / excavation",             "start": "2027-05", "months": 2, "status": "Pending" },
+    { "id": "p7",  "track": "Site Work", "label": "Grade beam (footing)",                "start": "2027-06", "months": 1, "status": "Pending" },
+    { "id": "p8",  "track": "Site Work", "label": "Asphalt court base",                  "start": "2027-07", "months": 1, "status": "Pending" },
+    { "id": "p9",  "track": "Site Work", "label": "Court surface (quartz)",              "start": "2027-08", "months": 1, "status": "Pending" },
+
+    { "id": "p10", "track": "Structure", "label": "Order dome (Farley lead time)",       "start": "2027-03", "months": 3, "status": "Pending" },
+    { "id": "p11", "track": "Structure", "label": "Erect bubble / dome",                 "start": "2027-09", "months": 2, "status": "Pending" },
+
+    { "id": "p12", "track": "Utilities", "label": "Gas main extension (Enbridge)",       "start": "2027-05", "months": 3, "status": "Pending" },
+    { "id": "p13", "track": "Utilities", "label": "Electrical service (Oakville Hydro)", "start": "2027-05", "months": 2, "status": "Pending" },
+    { "id": "p14", "track": "Utilities", "label": "Water / septic",                      "start": "2027-06", "months": 2, "status": "Pending" },
+
+    { "id": "p15", "track": "Clubhouse", "label": "Build / relocate clubhouse",          "start": "2027-06", "months": 4, "status": "Pending" },
+    { "id": "p16", "track": "Clubhouse", "label": "Fit-out (lighting, HVAC, gas)",       "start": "2027-10", "months": 2, "status": "Pending" },
+
+    { "id": "p17", "track": "Move-Over", "label": "Last indoor season at OLD site",      "start": "2027-11", "months": 6, "status": "Pending" },
+    { "id": "p18", "track": "Move-Over", "label": "Move equipment + clubhouse",          "start": "2028-04", "months": 1, "status": "Pending" },
+    { "id": "p19", "track": "Move-Over", "label": "Outdoor courts open (new site)",      "start": "2028-05", "months": 1, "status": "Pending" },
+    { "id": "p20", "track": "Move-Over", "label": "Grand opening",                       "start": "2028-09", "months": 1, "status": "Pending" }
+  ],
+  "lastUpdated": "2026-07-31T00:00:00.000Z"
+}

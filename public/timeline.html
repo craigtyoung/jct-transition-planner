@@ -6,6 +6,33 @@
 <title>JCT Transition Planner — Timeline</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="style.css">
+<style>
+.gantt-legend{display:flex;flex-wrap:wrap;gap:14px;margin:4px 0 12px;font-size:12px;color:var(--gray-500,#64748b)}
+.gantt-legend span{display:inline-flex;align-items:center;gap:6px}
+.gantt-legend i{width:14px;height:14px;border-radius:3px;display:inline-block}
+.gantt-scroll{overflow-x:auto;border:1px solid var(--gray-100,#e2e8f0);border-radius:10px;background:#fff}
+.gantt-inner{position:relative}
+.gantt-head{display:flex;height:36px;border-bottom:1px solid var(--gray-100,#e2e8f0);background:#fff}
+.gantt-head .g-spacer{flex:0 0 auto;border-right:1px solid var(--gray-100,#e2e8f0)}
+.g-mcell{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;color:var(--gray-500,#64748b);border-right:1px solid var(--gray-50,#f1f5f9)}
+.g-mcell.jan{border-left:2px solid var(--gray-200,#cbd5e1)}
+.g-mcell .g-yr{font-weight:800;color:var(--navy,#0f2540);font-size:9px;line-height:1}
+.gantt-body{position:relative;padding-top:22px}
+.gantt-bg{position:absolute;top:0;bottom:0;pointer-events:none}
+.g-season{position:absolute;top:0;bottom:0}
+.g-season.outdoor{background:rgba(245,158,11,0.08)}
+.g-grid{position:absolute;top:0;bottom:0;width:1px;background:var(--gray-50,#f1f5f9)}
+.g-marker{position:absolute;top:0;bottom:0;width:2px;z-index:4;pointer-events:none}
+.g-marker .g-mlabel{position:absolute;top:3px;left:4px;font-size:9px;font-weight:700;white-space:nowrap;padding:1px 5px;border-radius:3px;color:#fff}
+.gantt-row{display:flex;height:34px;align-items:center;position:relative;z-index:2}
+.g-lbl{flex:0 0 auto;font-size:12px;color:var(--gray-700,#334155);padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:1px solid var(--gray-100,#e2e8f0);height:100%;display:flex;align-items:center;background:#fff}
+.g-track{flex:0 0 auto;position:relative;height:100%}
+.g-bar{position:absolute;top:5px;height:24px;border-radius:5px;cursor:grab;display:flex;align-items:center;padding:0 7px;font-size:11px;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.18);user-select:none}
+.g-bar:active{cursor:grabbing}
+.g-resize{position:absolute;right:0;top:0;bottom:0;width:10px;cursor:ew-resize;border-radius:0 5px 5px 0}
+.g-resize:hover{background:rgba(255,255,255,.35)}
+.g-tracklabel{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:10px 10px 3px;position:relative;z-index:2}
+</style>
 </head>
 <body>
 
@@ -27,6 +54,14 @@
   <div class="page-header">
     <div class="page-title">Transition Timeline</div>
     <div class="page-subtitle">Two-track visual — click any status badge to cycle: Pending → In Progress → Done → Delayed</div>
+  </div>
+
+  <!-- Build Plan — Gantt -->
+  <div class="card section">
+    <div class="card-title">Build Plan — Gantt</div>
+    <div class="page-subtitle" style="margin-bottom:8px">Drag a bar to move its timing · drag the right edge to change duration · amber = outdoor build season (the only window heavy site work can happen)</div>
+    <div class="gantt-legend" id="gantt-legend"></div>
+    <div class="gantt-scroll"><div class="gantt-inner" id="gantt"></div></div>
   </div>
 
   <!-- Progress summary -->
@@ -83,10 +118,122 @@ const STATUS_BADGE = {
   'Delayed':     'badge-Delayed'
 };
 
+// ============ Build Plan — Gantt ============
+let plan = { phases: [] };
+let planSaveTimer = null;
+let gdrag = null;
+
+const AXIS_START = '2026-07', AXIS_END = '2028-09';
+const MONTH_W = 46, LBL_W = 190;
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const TRACK_ORDER  = ['Approvals','Site Work','Structure','Utilities','Clubhouse','Move-Over'];
+const TRACK_COLORS = { 'Approvals':'#2563eb','Site Work':'#f59e0b','Structure':'#16a34a','Utilities':'#7c3aed','Clubhouse':'#0d9488','Move-Over':'#64748b' };
+
+function ymToIdx(ym){ const [y,m]=ym.split('-').map(Number); const [sy,sm]=AXIS_START.split('-').map(Number); return (y-sy)*12+(m-sm); }
+function idxToYm(i){ const [sy,sm]=AXIS_START.split('-').map(Number); const t=sy*12+(sm-1)+i; return Math.floor(t/12)+'-'+String(t%12+1).padStart(2,'0'); }
+const TOTAL = ymToIdx(AXIS_END)+1;
+function curYm(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function gEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+function barLabel(p){ const s=ymToIdx(p.start), n=Math.max(1,p.months||1), e=s+n-1; const sm=idxToYm(s).split('-').map(Number), em=idxToYm(e).split('-').map(Number); return n>1 ? MON[sm[1]-1]+'–'+MON[em[1]-1]+" '"+String(em[0]).slice(2) : MON[sm[1]-1]+" '"+String(sm[0]).slice(2); }
+
+function renderGantt(){
+  const host = document.getElementById('gantt');
+  if (!host) return;
+  const tW = TOTAL*MONTH_W;
+  host.style.width = (LBL_W+tW)+'px';
+
+  let head = '<div class="gantt-head"><div class="g-spacer" style="width:'+LBL_W+'px"></div>';
+  for (let i=0;i<TOTAL;i++){ const [y,m]=idxToYm(i).split('-').map(Number);
+    head += '<div class="g-mcell'+(m===1?' jan':'')+'" style="width:'+MONTH_W+'px">'+((m===1||i===0)?'<span class="g-yr">'+y+'</span>':'')+'<span>'+MON[m-1]+'</span></div>'; }
+  head += '</div>';
+
+  let bg = '<div class="gantt-bg" style="left:'+LBL_W+'px;width:'+tW+'px">';
+  for (let i=0;i<TOTAL;i++){ const m=Number(idxToYm(i).split('-')[1]);
+    if (m>=5 && m<=10) bg += '<div class="g-season outdoor" style="left:'+(i*MONTH_W)+'px;width:'+MONTH_W+'px"></div>';
+    bg += '<div class="g-grid" style="left:'+(i*MONTH_W)+'px"></div>'; }
+  const markers = [
+    { ym: curYm(),    color:'#0f2540', label:'Today' },
+    { ym: '2027-05',  color:'#dc2626', label:'Permits must clear' },
+    { ym: '2028-05',  color:'#dc2626', label:'Old lease ends → move' }
+  ];
+  markers.forEach(mk=>{ const i=ymToIdx(mk.ym); if(i<0||i>TOTAL) return;
+    bg += '<div class="g-marker" style="left:'+(i*MONTH_W)+'px;background:'+mk.color+'"><span class="g-mlabel" style="background:'+mk.color+'">'+mk.label+'</span></div>'; });
+  bg += '</div>';
+
+  let rows = '';
+  TRACK_ORDER.forEach(track=>{
+    const items = plan.phases.filter(p=>p.track===track);
+    if (!items.length) return;
+    rows += '<div class="g-tracklabel" style="color:'+TRACK_COLORS[track]+'">'+track+'</div>';
+    items.forEach(p=>{
+      const s=ymToIdx(p.start), n=Math.max(1,p.months||1);
+      rows += '<div class="gantt-row"><div class="g-lbl" style="width:'+LBL_W+'px" title="'+gEsc(p.label)+'">'+gEsc(p.label)+'</div>'+
+        '<div class="g-track" style="width:'+tW+'px">'+
+        '<div class="g-bar" style="left:'+(s*MONTH_W)+'px;width:'+(n*MONTH_W-3)+'px;background:'+TRACK_COLORS[track]+'" onmousedown="ganttBarDown(event,\''+p.id+'\')">'+
+        '<span style="overflow:hidden;text-overflow:ellipsis">'+barLabel(p)+'</span>'+
+        '<div class="g-resize" onmousedown="ganttResizeDown(event,\''+p.id+'\')"></div>'+
+        '</div></div></div>';
+    });
+  });
+
+  host.innerHTML = head + '<div class="gantt-body">' + bg + rows + '</div>';
+  const lg = document.getElementById('gantt-legend');
+  if (lg) lg.innerHTML = TRACK_ORDER.map(t=>'<span><i style="background:'+TRACK_COLORS[t]+'"></i>'+t+'</span>').join('') +
+    '<span><i style="background:rgba(245,158,11,0.4)"></i>Outdoor build season</span>';
+}
+
+function ganttBarDown(e, id){
+  if (e.target.classList.contains('g-resize')) return;
+  e.preventDefault();
+  const p = plan.phases.find(x=>x.id===id); if(!p) return;
+  gdrag = { id, mode:'move', startX:e.clientX, origStart:ymToIdx(p.start), months:Math.max(1,p.months||1), bar:e.currentTarget, pending:null };
+  document.addEventListener('mousemove', ganttMove);
+  document.addEventListener('mouseup', ganttUp);
+}
+function ganttResizeDown(e, id){
+  e.preventDefault(); e.stopPropagation();
+  const p = plan.phases.find(x=>x.id===id); if(!p) return;
+  gdrag = { id, mode:'resize', startX:e.clientX, origMonths:Math.max(1,p.months||1), startIdx:ymToIdx(p.start), bar:e.target.closest('.g-bar'), pending:null };
+  document.addEventListener('mousemove', ganttMove);
+  document.addEventListener('mouseup', ganttUp);
+}
+function ganttMove(e){
+  if (!gdrag) return;
+  const delta = Math.round((e.clientX-gdrag.startX)/MONTH_W);
+  if (gdrag.mode==='move'){
+    const ns = Math.max(0, Math.min(TOTAL-gdrag.months, gdrag.origStart+delta));
+    gdrag.bar.style.left = (ns*MONTH_W)+'px';
+    gdrag.pending = { start: idxToYm(ns) };
+  } else {
+    const nm = Math.max(1, Math.min(TOTAL-gdrag.startIdx, gdrag.origMonths+delta));
+    gdrag.bar.style.width = (nm*MONTH_W-3)+'px';
+    gdrag.pending = { months: nm };
+  }
+}
+function ganttUp(){
+  document.removeEventListener('mousemove', ganttMove);
+  document.removeEventListener('mouseup', ganttUp);
+  if (gdrag && gdrag.pending){
+    const p = plan.phases.find(x=>x.id===gdrag.id);
+    if (p){ Object.assign(p, gdrag.pending); schedSavePlan(); }
+    renderGantt();
+  }
+  gdrag = null;
+}
+function schedSavePlan(){ clearTimeout(planSaveTimer); planSaveTimer = setTimeout(savePlan, 700); }
+async function savePlan(){
+  const res = await fetch('/api/build-plan', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(plan) });
+  if (res.ok){ const el=document.getElementById('save-indicator'); el.classList.add('visible'); setTimeout(()=>el.classList.remove('visible'),2000); }
+}
+// ============ end Gantt ============
+
 async function load() {
   const res = await fetch('/api/milestones');
   milestones = await res.json();
   renderAll();
+  try { const pr = await fetch('/api/build-plan'); if (pr.ok) plan = await pr.json(); } catch (e) { /* no plan yet */ }
+  if (!plan.phases) plan.phases = [];
+  renderGantt();
   const ts = milestones.lastUpdated ? new Date(milestones.lastUpdated).toLocaleString() : '—';
   document.getElementById('footer-ts').textContent = `JCT Transition Planner · Last saved: ${ts}`;
 }
