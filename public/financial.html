@@ -16,6 +16,12 @@
   .bd-remove:hover{background:var(--gray-50,#f1f5f9);color:var(--red,#dc2626)}
   .bd-apply{border:none;background:transparent;color:var(--gray-500,#64748b);cursor:pointer;font-size:16px;padding:6px 8px;border-radius:6px;line-height:1}
   .bd-apply:hover{background:var(--gray-50,#f1f5f9);color:var(--navy,#0f2540)}
+  .bd-drag{cursor:grab;color:var(--gray-300,#cbd5e1);font-size:16px;padding:0 2px;user-select:none;line-height:1;flex:0 0 auto}
+  .bd-drag:active{cursor:grabbing}
+  .bd-drag:hover{color:var(--navy,#0f2540)}
+  .bd-row.dragging{opacity:.4}
+  .bd-row.drop-above{box-shadow:inset 0 3px 0 var(--navy,#0f2540)}
+  .bd-row.drop-below{box-shadow:inset 0 -3px 0 var(--navy,#0f2540)}
   .bd-foot{display:flex;align-items:center;justify-content:space-between;margin-top:12px;flex-wrap:wrap;gap:10px}
   .bd-total{font-size:14px;color:var(--gray-500,#64748b)}
   .bd-total strong{color:var(--navy,#0f2540);font-size:16px;margin-left:6px}
@@ -669,7 +675,8 @@ function renderBreakdown(kind) {
   }
 
   const rows = items.map((it, idx) => `
-    <div class="bd-row">
+    <div class="bd-row" data-idx="${idx}" ondragover="bdDragOver(event,'${kind}',${idx})" ondragleave="bdDragLeave(event)" ondrop="bdDrop(event,'${kind}',${idx})">
+      <span class="bd-drag" draggable="true" title="Drag to reorder" ondragstart="bdDragStart(event,'${kind}',${idx})" ondragend="bdDragEnd(event)">⠿</span>
       <input class="bd-label" type="text" value="${escapeAttr(it.label)}" placeholder="Item" oninput="editBreakdown('${kind}',${idx},'label',this.value)">
       <div class="input-prefix bd-amt"><span class="prefix">$</span>
         <input type="text" value="${it.amount ? Number(it.amount).toLocaleString('en-CA') : ''}" placeholder="0" oninput="editBreakdown('${kind}',${idx},'amount',this.value)" onfocus="fmtFocus(this)" onblur="fmtBlur(this)">
@@ -797,6 +804,60 @@ function clearBreakdown(kind) {
   refreshConfig();
   recalc();
   schedSave();
+}
+
+// ---- Drag-and-drop reordering of breakdown lines ----
+let bdDrag = null; // { kind, from }
+
+function clearDropMarks() {
+  document.querySelectorAll('.bd-row.drop-above, .bd-row.drop-below')
+    .forEach(r => r.classList.remove('drop-above', 'drop-below'));
+}
+function bdDragStart(e, kind, idx) {
+  bdDrag = { kind, from: idx };
+  e.dataTransfer.effectAllowed = 'move';
+  try { e.dataTransfer.setData('text/plain', String(idx)); } catch (_) {}
+  const row = e.target.closest('.bd-row');
+  if (row) row.classList.add('dragging');
+}
+function bdDragOver(e, kind, idx) {
+  if (!bdDrag || bdDrag.kind !== kind) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const row = e.currentTarget;
+  const rect = row.getBoundingClientRect();
+  const below = (e.clientY - rect.top) > rect.height / 2;
+  clearDropMarks();
+  row.classList.add(below ? 'drop-below' : 'drop-above');
+}
+function bdDragLeave(e) {
+  e.currentTarget.classList.remove('drop-above', 'drop-below');
+}
+function bdDrop(e, kind, idx) {
+  if (!bdDrag || bdDrag.kind !== kind) return;
+  e.preventDefault();
+  const row = e.currentTarget;
+  const rect = row.getBoundingClientRect();
+  const below = (e.clientY - rect.top) > rect.height / 2;
+  let to = below ? idx + 1 : idx;
+  const from = bdDrag.from;
+  const items = bdItems(kind);
+  if (items && from != null && from !== to) {
+    const [moved] = items.splice(from, 1);
+    if (from < to) to--;            // indices shift after removal
+    items.splice(to, 0, moved);
+    renderBreakdown(kind);
+    refreshConfig();
+    recalc();
+    schedSave();
+  }
+  bdDrag = null;
+  clearDropMarks();
+}
+function bdDragEnd() {
+  bdDrag = null;
+  clearDropMarks();
+  document.querySelectorAll('.bd-row.dragging').forEach(r => r.classList.remove('dragging'));
 }
 
 function schedSave() {
