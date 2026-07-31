@@ -1,0 +1,149 @@
+{
+  "groups": [
+    {
+      "id": "contractors",
+      "title": "Contractors & Suppliers",
+      "contacts": [
+        {
+          "id": "jim-capstick",
+          "name": "Jim Capstick",
+          "company": "DC9 Contracting / 179 Contracting",
+          "role": "JCT partner — lead contact, new site",
+          "phone": "416 434 0753",
+          "email": "jim.179contracting@gmail.com",
+          "notes": "Primary partner-side contact. Jim's party is building a Golf Riot driving range at William Halton Pkwy; JCT partners to add the tennis facility. They are electrical, mechanical and excavation contractors and can build the whole thing — Craig wants to push toward using them. Also: sales@179contracting.ca."
+        },
+        {
+          "id": "dave-diamanti",
+          "name": "Dave Diamanti",
+          "company": "Lakeside Contracting (1469328 Ontario Ltd.)",
+          "role": "JCT partner — build-finance counterparty",
+          "phone": "",
+          "email": "ddiamanti@lakeside-contracting.com",
+          "notes": "OPEN ACTION: contact for the excavation / grade-beam budget quote — the last open cost input before the Aug 6 Farley meeting. Lakeside is the primary lease holder; they built + leased the old facility. Build-finance Option 2 (builder-financed 5-yr payback +10%) is the lead structure."
+        },
+        {
+          "id": "daisy-nocos",
+          "name": "Daisy Nocos",
+          "company": "Lakeside Contracting",
+          "role": "Accounting Manager",
+          "phone": "",
+          "email": "dnocos@lakeside-contracting.com",
+          "notes": "Lakeside finance/accounting contact."
+        },
+        {
+          "id": "jason-abbott",
+          "name": "Jason Abbott",
+          "company": "The Farley Group",
+          "role": "VP Sales",
+          "phone": "1.888.445.3223 / cell 416.737.2589",
+          "email": "jabbott@thefarleygroup.com",
+          "notes": "Dome sales, sizing, intros. Existing JCT supplier (OTA official). Bigger dome = more cost-efficient per court. Will connect area GCs when ready."
+        },
+        {
+          "id": "hugh-farley",
+          "name": "Hugh",
+          "company": "The Farley Group",
+          "role": "Finance team",
+          "phone": "",
+          "email": "",
+          "notes": "$0-down 5-year new-dome operating lease. Financing Teams meeting booked Thu Aug 6. Rolls a new dome into opex instead of capital outlay."
+        },
+        {
+          "id": "clark-farley",
+          "name": "Bob / Mike Clark",
+          "company": "The Farley Group",
+          "role": "Service team",
+          "phone": "",
+          "email": "",
+          "notes": "Removal/disposal quote on the current dome + a read on whether it's even worth moving the old bubble. Gates the move-vs-new-dome decision. Craig already speaks with Bob."
+        },
+        {
+          "id": "justin-cole",
+          "name": "Justin Cole",
+          "company": "Losberger De Boer (RDS Division)",
+          "role": "Canadian contact — European modular halls",
+          "phone": "(800) 964-8638",
+          "email": "",
+          "notes": "Prosport / Abrisport / Polygonale. Tennis-specific, demountable and fully relocatable — if the lease ends the building moves. First-mover option; no Ontario club has deployed this yet. losbergerdeboer.com/us"
+        },
+        {
+          "id": "cavalry-contracting",
+          "name": "Cavalry Contracting",
+          "company": "Britespan dealer, Caledon ON",
+          "role": "Fabric building supplier",
+          "phone": "",
+          "email": "cavalrycontracting.com",
+          "notes": "Ontario Britespan dealer ~30 min from JCT. Fabric building (not a dome) — year-round, no blowers, natural daylight. Shell $25-50/sq ft."
+        },
+        {
+          "id": "area-gcs",
+          "name": "Gateman Milloy / Rutherford / Richfield",
+          "company": "Area general contractors (dome-experienced)",
+          "role": "Courts + grade beam build",
+          "phone": "",
+          "email": "",
+          "notes": "GCs with dome knowledge in the area — Jason Abbott (Farley) will connect Craig when ready. For competitive quotes on courts + grade beam."
+        }
+      ]
+    },
+    {
+      "id": "town",
+      "title": "Town Contacts",
+      "contacts": [
+        {
+          "id": "town-oakville",
+          "name": "Town of Oakville — Planning & Building",
+          "company": "Town of Oakville",
+          "role": "Permits / site requirements",
+          "phone": "",
+          "email": "",
+          "notes": "GET A NAMED CONTACT. Town dictates: pond size (fire-fighting water volume for a bubble + gas is greater than the driving range alone — any increase is Craig's cost); parking lot specs (shared proportionally); washroom / sewage / septic spec; whether the existing clubhouse is accepted as relocatable (floor reinforced to 50 lbs/sq.ft at the Town's earlier request). Bubble permit + grade-beam approval + pre-approval for an additional 4-court bubble all run through here."
+        },
+        {
+          "id": "region-halton",
+          "name": "Region of Halton — Roads/Permits",
+          "company": "Regional Municipality of Halton",
+          "role": "Regional Road permits",
+          "phone": "",
+          "email": "",
+          "notes": "William Halton Pkwy is a Regional Road (Burnhamthorpe was municipal). Additional permits are required for any work along a Regional Road — factor into the permit timeline."
+        }
+      ]
+    },
+    {
+      "id": "planning",
+      "title": "Planning Contacts (Utilities & Funding)",
+      "contacts": [
+        {
+          "id": "brad-davies-enbridge",
+          "name": "Brad Davies, C.TECH",
+          "company": "Enbridge Gas — Construction Hamilton",
+          "role": "Sr. Analyst, New Business Project Coordinator",
+          "phone": "289-649-2030 ext. 5213017",
+          "email": "Brad.Davies@enbridge.com",
+          "notes": "NATURAL GAS QUOTE (Jul 30, 2026): no gas main fronts the property. Scope = 260m gas main extension + 120m service to the dome. Cost likely IN EXCESS OF $120,000 + HST (assumes adequate capacity, no rock excavation). Property-line-meter + private piping offset saves only $10-15K (needs a pricier 14 kPa meter). Tennis-only cost (golf range doesn't need heat). Self-perform excavation TBC. To proceed: submit a commercial service request via Enbridge GetConnected (enbridgegas.com/connect-to-gas/builders-hvacs)."
+        },
+        {
+          "id": "tomas-sharaf-hydro",
+          "name": "Tomas Sharaf",
+          "company": "Oakville Hydro",
+          "role": "Service connection",
+          "phone": "",
+          "email": "",
+          "notes": "ELECTRICAL: on-site he revised the 600V/200A estimate to ~$100K (closest 600V is 3 pole-spans east of the gate). 240V single-phase (400A) is available at the driveway pole = cheap install. RESOLVED via Jim's ~$5k step-up transformer route (Option B) — makes 600V locally, bubble equipment untouched. Final Hydro cost is only set after the LOI is accepted and a contract is signed with Oakville Hydro."
+        },
+        {
+          "id": "tennis-canada",
+          "name": "Tennis Canada — Rogers Year-Round Program",
+          "company": "Tennis Canada",
+          "role": "Facility funding grant",
+          "phone": "",
+          "email": "tenniscanada.com",
+          "notes": "Up to $200,000 seed funding per project. Currently air-dome focused — confirm eligibility for the chosen structure type. Treat as de-risked capital in the Lakeside financing pitch (part of the ~$700K down: $500K reserve + $200K grant)."
+        }
+      ]
+    }
+  ],
+  "lastUpdated": "2026-07-31T09:10:00-04:00"
+}

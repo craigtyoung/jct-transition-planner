@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JCT Transition Planner — Context</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="style.css">
+<style>
+.ctx-group { margin-bottom: 30px; }
+.ctx-group-head {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 14px;
+}
+.ctx-group-title {
+  font-size: 13px; font-weight: 800; color: var(--navy);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  border: 1px solid transparent; border-radius: 6px;
+  padding: 3px 6px; background: transparent; min-width: 200px;
+}
+.ctx-group-title:focus { outline: none; border-color: var(--gray-200); background: white; }
+.ctx-count {
+  font-size: 11px; color: var(--gray-500);
+  background: var(--gray-100); padding: 2px 8px; border-radius: 10px; font-weight: 600;
+}
+.ctx-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+@media (max-width: 720px) { .ctx-grid { grid-template-columns: 1fr; } }
+.ctx-card {
+  border: 1px solid var(--gray-100); border-radius: 10px;
+  padding: 14px 16px; background: white; position: relative;
+  transition: box-shadow 0.12s;
+}
+.ctx-card:hover { box-shadow: 0 2px 10px rgba(15,37,64,0.06); }
+.ctx-card input, .ctx-card textarea {
+  border: 1px solid transparent; border-radius: 5px;
+  padding: 4px 6px; width: 100%; font-family: inherit;
+  color: var(--gray-700); background: transparent;
+  transition: border-color 0.1s, background 0.1s;
+}
+.ctx-card input:hover, .ctx-card textarea:hover { background: var(--gray-50); }
+.ctx-card input:focus, .ctx-card textarea:focus {
+  outline: none; border-color: var(--gray-200); background: white;
+}
+.ctx-name  { font-size: 15px; font-weight: 800; color: var(--navy) !important; }
+.ctx-company { font-size: 12px; font-weight: 600; }
+.ctx-role  { font-size: 12px; font-style: italic; color: var(--gray-500) !important; }
+.ctx-line { display: grid; grid-template-columns: 68px 1fr; align-items: center; gap: 4px; margin-top: 4px; }
+.ctx-line .lbl { font-size: 10px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em; }
+.ctx-notes { font-size: 12px; line-height: 1.5; resize: vertical; min-height: 54px; margin-top: 8px; }
+.ctx-del {
+  position: absolute; top: 8px; right: 8px;
+  border: none; background: transparent; cursor: pointer;
+  color: var(--gray-300); font-size: 15px; line-height: 1;
+  padding: 4px; border-radius: 5px;
+}
+.ctx-del:hover { color: #c0392b; background: var(--gray-50); }
+.btn-ghost {
+  border: 1px dashed var(--gray-200); background: transparent;
+  color: var(--gray-500); cursor: pointer; font: 600 12px system-ui;
+  padding: 7px 14px; border-radius: 8px; transition: all 0.12s;
+}
+.btn-ghost:hover { border-color: var(--navy); color: var(--navy); }
+.ctx-add-row { margin-top: 12px; }
+.ctx-toolbar { display: flex; justify-content: flex-end; margin-bottom: 18px; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">JCT <span>Transition Planner</span></div>
+  <div class="nav-links">
+    <a href="/" class="nav-link">Command Centre</a>
+    <a href="/financial.html" class="nav-link">Financial Model</a>
+    <a href="/savings.html" class="nav-link">Savings Plan</a>
+    <a href="/timeline.html" class="nav-link">Timeline</a>
+    <a href="/checklist.html" class="nav-link">Wind-Down</a>
+    <a href="/context.html" class="nav-link active">Context</a>
+  </div>
+  <div class="nav-save" id="save-indicator">✓ Saved</div>
+</nav>
+
+<div class="main">
+
+  <div class="page-header">
+    <div class="page-title">Context</div>
+    <div class="page-subtitle">Contractors, town and planning contacts for the new-site build — the who and the numbers behind the plan</div>
+  </div>
+
+  <div class="ctx-toolbar">
+    <button class="btn-ghost" onclick="addGroup()">+ Add group</button>
+  </div>
+
+  <div id="ctx-container">
+    <div style="color:var(--gray-300);text-align:center;padding:40px">Loading…</div>
+  </div>
+
+</div>
+
+<div class="footer" id="footer-ts">JCT Transition Planner · Updated —</div>
+
+<script>
+let ctx = { groups: [] };
+let saveTimer = null;
+
+const uid = () => 'x' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36);
+
+async function load() {
+  try {
+    const res = await fetch('/api/context');
+    if (res.ok) ctx = await res.json();
+  } catch (e) { /* start empty */ }
+  if (!ctx.groups) ctx.groups = [];
+  render();
+  const ts = ctx.lastUpdated ? new Date(ctx.lastUpdated).toLocaleString() : '—';
+  document.getElementById('footer-ts').textContent = `JCT Transition Planner · Last saved: ${ts}`;
+}
+
+function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+function render() {
+  const c = document.getElementById('ctx-container');
+  c.innerHTML = '';
+
+  if (!ctx.groups.length) {
+    c.innerHTML = '<div style="color:var(--gray-300);text-align:center;padding:40px">No contact groups yet. Click <strong>+ Add group</strong> to start.</div>';
+    return;
+  }
+
+  ctx.groups.forEach(group => {
+    const block = document.createElement('div');
+    block.className = 'ctx-group';
+
+    const head = document.createElement('div');
+    head.className = 'ctx-group-head';
+    head.innerHTML = `
+      <input class="ctx-group-title" value="${esc(group.title)}"
+             onchange="onGroupTitle('${group.id}', this.value)">
+      <span class="ctx-count">${(group.contacts || []).length}</span>
+      <button class="ctx-del" title="Delete group" style="position:static"
+              onclick="delGroup('${group.id}')">🗑</button>
+    `;
+    block.appendChild(head);
+
+    const grid = document.createElement('div');
+    grid.className = 'ctx-grid';
+    (group.contacts || []).forEach(ct => grid.appendChild(cardEl(group.id, ct)));
+    block.appendChild(grid);
+
+    const addRow = document.createElement('div');
+    addRow.className = 'ctx-add-row';
+    addRow.innerHTML = `<button class="btn-ghost" onclick="addContact('${group.id}')">+ Add contact</button>`;
+    block.appendChild(addRow);
+
+    c.appendChild(block);
+  });
+}
+
+function cardEl(gid, ct) {
+  const card = document.createElement('div');
+  card.className = 'ctx-card';
+  card.innerHTML = `
+    <button class="ctx-del" title="Delete contact" onclick="delContact('${gid}','${ct.id}')">✕</button>
+    <input class="ctx-name" placeholder="Name" value="${esc(ct.name)}"
+           onchange="onField('${gid}','${ct.id}','name',this.value)">
+    <input class="ctx-company" placeholder="Company" value="${esc(ct.company)}"
+           onchange="onField('${gid}','${ct.id}','company',this.value)">
+    <input class="ctx-role" placeholder="Role" value="${esc(ct.role)}"
+           onchange="onField('${gid}','${ct.id}','role',this.value)">
+    <div class="ctx-line"><span class="lbl">Phone</span>
+      <input placeholder="—" value="${esc(ct.phone)}"
+             onchange="onField('${gid}','${ct.id}','phone',this.value)"></div>
+    <div class="ctx-line"><span class="lbl">Email</span>
+      <input placeholder="—" value="${esc(ct.email)}"
+             onchange="onField('${gid}','${ct.id}','email',this.value)"></div>
+    <textarea class="ctx-notes" placeholder="Notes, quotes, open actions…"
+              onchange="onField('${gid}','${ct.id}','notes',this.value)">${esc(ct.notes)}</textarea>
+  `;
+  return card;
+}
+
+function group(gid) { return ctx.groups.find(g => g.id === gid); }
+function contact(gid, cid) { const g = group(gid); return g && (g.contacts || []).find(c => c.id === cid); }
+
+function onField(gid, cid, key, val) {
+  const ct = contact(gid, cid);
+  if (ct) { ct[key] = val; schedSave(); }
+}
+function onGroupTitle(gid, val) {
+  const g = group(gid);
+  if (g) { g.title = val; schedSave(); }
+}
+function addContact(gid) {
+  const g = group(gid);
+  if (!g) return;
+  if (!g.contacts) g.contacts = [];
+  g.contacts.push({ id: uid(), name: '', company: '', role: '', phone: '', email: '', notes: '' });
+  render(); schedSave();
+}
+function delContact(gid, cid) {
+  const g = group(gid);
+  if (!g) return;
+  const ct = contact(gid, cid);
+  if (ct && (ct.name || ct.company || ct.notes) && !confirm(`Delete ${ct.name || 'this contact'}?`)) return;
+  g.contacts = (g.contacts || []).filter(c => c.id !== cid);
+  render(); schedSave();
+}
+function addGroup() {
+  ctx.groups.push({ id: uid(), title: 'New Group', contacts: [] });
+  render(); schedSave();
+}
+function delGroup(gid) {
+  const g = group(gid);
+  if (!g) return;
+  if ((g.contacts || []).length && !confirm(`Delete "${g.title}" and its ${g.contacts.length} contact(s)?`)) return;
+  ctx.groups = ctx.groups.filter(x => x.id !== gid);
+  render(); schedSave();
+}
+
+function schedSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(save, 900);
+}
+async function save() {
+  const res = await fetch('/api/context', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(ctx)
+  });
+  if (res.ok) {
+    const el = document.getElementById('save-indicator');
+    el.classList.add('visible');
+    setTimeout(() => el.classList.remove('visible'), 2000);
+    const d = await res.json();
+    document.getElementById('footer-ts').textContent =
+      `JCT Transition Planner · Last saved: ${new Date(d.timestamp).toLocaleString()}`;
+  }
+}
+
+load();
+</script>
+<script src="chat.js"></script>
+</body>
+</html>

@@ -56,6 +56,74 @@ if (SITE_PASSWORD) {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// POST /api/chat — "Ask the Planner" assistant.
+// Proxies to the Anthropic API. The API key stays server-side (env var) and is
+// NEVER sent to the browser. Grounds every answer in the live planner JSON data.
+app.post('/api/chat', async (req, res) => {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return res.status(503).json({
+      error: 'The assistant is not configured yet. Set ANTHROPIC_API_KEY in the server environment (Railway → Variables) and redeploy.'
+    });
+  }
+  if (typeof fetch !== 'function') {
+    return res.status(500).json({ error: 'Server runtime has no fetch — needs Node 18+.' });
+  }
+  const messages = Array.isArray(req.body && req.body.messages) ? req.body.messages : null;
+  if (!messages || !messages.length) {
+    return res.status(400).json({ error: 'No messages provided.' });
+  }
+
+  // Gather all planner data files as grounding context.
+  let dataBlock = '';
+  try {
+    for (const file of fs.readdirSync(DATA_DIR)) {
+      if (!file.endsWith('.json') || file === 'probe.json') continue;
+      try {
+        dataBlock += `\n=== ${file} ===\n${fs.readFileSync(path.join(DATA_DIR, file), 'utf8')}\n`;
+      } catch { /* skip unreadable */ }
+    }
+  } catch { /* no data dir — proceed without grounding */ }
+
+  const system = `You are the assistant for the Joshua Creek Tennis (JCT) Transition Planner — a private planning tool for relocating the tennis club to a new site on William Halton Parkway, Oakville, Ontario, targeting a September 2028 opening.
+
+Answer questions using ONLY the planner data below. Be concise, specific, and cite the actual numbers, names, and contacts. If something isn't in the data, say so plainly — never invent figures, costs, dates, or contact details. All money is in Canadian dollars. When discussing a cost line, note whether the data marks it as shared (golf + tennis) or tennis-only.
+
+=== PLANNER DATA ===${dataBlock}`;
+
+  const model = process.env.CHAT_MODEL || 'claude-haiku-4-5-20251001';
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 1024,
+        system,
+        messages: messages.slice(-12).map(m => ({
+          role: m.role === 'assistant' ? 'assistant' : 'user',
+          content: String(m.content || '')
+        }))
+      })
+    });
+    if (!r.ok) {
+      const errText = await r.text();
+      return res.status(502).json({ error: `Anthropic API error (${r.status}). ${errText.slice(0, 300)}` });
+    }
+    const data = await r.json();
+    const reply = (data.content || [])
+      .filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+    res.json({ reply: reply || '(no response)' });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to reach the assistant: ' + ((e && e.message) || 'unknown error') });
+  }
+});
+
 // GET /api/:file — read a JSON data file
 app.get('/api/:file', (req, res) => {
   const name = req.params.file.replace(/[^a-z0-9-]/gi, '');
