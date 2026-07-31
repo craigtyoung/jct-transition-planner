@@ -14,6 +14,8 @@
   .bd-firm input{width:16px;height:16px;accent-color:var(--green,#16a34a);cursor:pointer}
   .bd-remove{border:none;background:transparent;color:var(--gray-500,#64748b);cursor:pointer;font-size:14px;padding:6px 8px;border-radius:6px;line-height:1}
   .bd-remove:hover{background:var(--gray-50,#f1f5f9);color:var(--red,#dc2626)}
+  .bd-apply{border:none;background:transparent;color:var(--gray-500,#64748b);cursor:pointer;font-size:16px;padding:6px 8px;border-radius:6px;line-height:1}
+  .bd-apply:hover{background:var(--gray-50,#f1f5f9);color:var(--navy,#0f2540)}
   .bd-foot{display:flex;align-items:center;justify-content:space-between;margin-top:12px;flex-wrap:wrap;gap:10px}
   .bd-total{font-size:14px;color:var(--gray-500,#64748b)}
   .bd-total strong{color:var(--navy,#0f2540);font-size:16px;margin-left:6px}
@@ -673,6 +675,7 @@ function renderBreakdown(kind) {
         <input type="text" value="${it.amount ? Number(it.amount).toLocaleString('en-CA') : ''}" placeholder="0" oninput="editBreakdown('${kind}',${idx},'amount',this.value)" onfocus="fmtFocus(this)" onblur="fmtBlur(this)">
       </div>
       <label class="bd-firm" title="Check when this figure is confirmed / quoted"><input type="checkbox" ${it.firm ? 'checked' : ''} onchange="toggleFirm('${kind}',${idx},this.checked)">firm</label>
+      <button class="bd-apply" title="Apply this amount to all court scenarios" onclick="applyToAll('${kind}',${idx})">⇄</button>
       <button class="bd-remove" title="Remove line" onclick="removeBreakdown('${kind}',${idx})">✕</button>
     </div>`).join('');
   box.innerHTML = `
@@ -711,6 +714,48 @@ function toggleFirm(kind, idx, checked) {
   items[idx].firm = !!checked;
   updateFooter(kind);
   schedSave();
+}
+
+// Recompute a config's stored aggregate for one breakdown kind (so non-selected
+// configs stay in sync after applyToAll — the Command Centre reads these fields).
+function recomputeAgg(cfg, kind) {
+  if (!cfg) return;
+  if (kind === 'build')        cfg.buildCost      = breakdownTotal(cfg.buildBreakdown);
+  else if (kind === 'opcosts') cfg.operatingCosts = breakdownTotal(cfg.opCostBreakdown);
+  else if (kind === 'income') {
+    const fill = cfg.courts ? (Number(cfg.fillRate) || 0) / 100 : 1;
+    cfg.revenue = Math.round(breakdownTotal(cfg.incomeBreakdown) * fill);
+  }
+}
+
+// Push this line's amount to every court scenario (fixed costs like clubhouse,
+// gas, electrical). Matches by label; creates the line where it's missing.
+function applyToAll(kind, idx) {
+  const items = bdItems(kind);
+  if (!items || !items[idx]) return;
+  const src = items[idx];
+  const label = (src.label || '').trim();
+  if (!label) { alert('Give the line a name first, then apply it across scenarios.'); return; }
+  const amount = Number(src.amount) || 0;
+  const arrKey = BREAKDOWN_KINDS[kind].arr;
+  const targets = Object.keys(model.configurations).filter(k => model.configurations[k].courts);
+  if (!confirm(`Apply "${label}" = ${fmt(amount)} to all ${targets.length} court scenarios?`)) return;
+
+  targets.forEach(k => {
+    const cfg = model.configurations[k];
+    if (!cfg[arrKey]) cfg[arrKey] = [];
+    const match = cfg[arrKey].find(i => (i.label || '').trim().toLowerCase() === label.toLowerCase());
+    if (match) match.amount = amount;
+    else cfg[arrKey].push({ label: label, amount: amount, firm: !!src.firm });
+    recomputeAgg(cfg, kind);
+  });
+
+  renderBreakdown(kind);
+  refreshConfig();
+  recalc();
+  schedSave();
+  const el = document.getElementById('save-indicator');
+  if (el) { el.classList.add('visible'); setTimeout(() => el.classList.remove('visible'), 2000); }
 }
 
 function addBreakdown(kind) {

@@ -5,7 +5,7 @@
     "annualLease": 169500
   },
   "newSite": {
-    "buildCost": 2201667,
+    "buildCost": 2733333,
     "downPayment": 800000,
     "interestRate": 6.5,
     "loanTermYears": 20,
@@ -14,7 +14,7 @@
     "annualLandSublease": 100000,
     "maintenanceSavings": 25000
   },
-  "selectedConfig": "B",
+  "selectedConfig": "C",
   "configurations": {
     "A": {
       "label": "6 Tennis Courts",
@@ -22,7 +22,7 @@
       "fillRate": 100,
       "revenue": 2319758,
       "operatingCosts": 1546839,
-      "buildCost": 1750000,
+      "buildCost": 1680000,
       "incomeBreakdown": [
         {
           "label": "Membership",
@@ -175,7 +175,7 @@
       "buildBreakdown": [
         {
           "label": "Bubble",
-          "amount": 900000,
+          "amount": 750000,
           "firm": false
         },
         {
@@ -186,6 +186,11 @@
         {
           "label": "Excavation / Asphalt",
           "amount": 150000,
+          "firm": false
+        },
+        {
+          "label": "Court Surface (Quartz)",
+          "amount": 100000,
           "firm": false
         },
         {
@@ -200,17 +205,12 @@
         },
         {
           "label": "Natural Gas Service",
-          "amount": 40000,
-          "firm": false
+          "amount": 120000,
+          "firm": true
         },
         {
           "label": "Water / Septic",
           "amount": 40000,
-          "firm": false
-        },
-        {
-          "label": "Court Surface (Quartz)",
-          "amount": 100000,
           "firm": false
         },
         {
@@ -243,10 +243,10 @@
     "B": {
       "label": "8 Tennis Courts",
       "courts": 8,
-      "fillRate": 100,
-      "revenue": 3093011,
+      "fillRate": 95,
+      "revenue": 2938360,
       "operatingCosts": 1955266,
-      "buildCost": 2201667,
+      "buildCost": 1931667,
       "incomeBreakdown": [
         {
           "label": "Membership",
@@ -399,7 +399,7 @@
       "buildBreakdown": [
         {
           "label": "Bubble",
-          "amount": 1200000,
+          "amount": 850000,
           "firm": false
         },
         {
@@ -410,6 +410,11 @@
         {
           "label": "Excavation / Asphalt",
           "amount": 200000,
+          "firm": false
+        },
+        {
+          "label": "Court Surface (Quartz)",
+          "amount": 133333,
           "firm": false
         },
         {
@@ -424,17 +429,12 @@
         },
         {
           "label": "Natural Gas Service",
-          "amount": 40000,
-          "firm": false
+          "amount": 120000,
+          "firm": true
         },
         {
           "label": "Water / Septic",
           "amount": 40000,
-          "firm": false
-        },
-        {
-          "label": "Court Surface (Quartz)",
-          "amount": 133333,
           "firm": false
         },
         {
@@ -467,10 +467,10 @@
     "C": {
       "label": "10 Tennis Courts",
       "courts": 10,
-      "fillRate": 88,
-      "revenue": 3402311,
+      "fillRate": 90,
+      "revenue": 3479637,
       "operatingCosts": 2363691,
-      "buildCost": 2653333,
+      "buildCost": 2183333,
       "incomeBreakdown": [
         {
           "label": "Membership",
@@ -623,7 +623,7 @@
       "buildBreakdown": [
         {
           "label": "Bubble",
-          "amount": 1500000,
+          "amount": 950000,
           "firm": false
         },
         {
@@ -634,6 +634,11 @@
         {
           "label": "Excavation / Asphalt",
           "amount": 250000,
+          "firm": false
+        },
+        {
+          "label": "Court Surface (Quartz)",
+          "amount": 166667,
           "firm": false
         },
         {
@@ -648,17 +653,12 @@
         },
         {
           "label": "Natural Gas Service",
-          "amount": 40000,
-          "firm": false
+          "amount": 120000,
+          "firm": true
         },
         {
           "label": "Water / Septic",
           "amount": 40000,
-          "firm": false
-        },
-        {
-          "label": "Court Surface (Quartz)",
-          "amount": 166667,
           "firm": false
         },
         {
@@ -691,10 +691,10 @@
     "D": {
       "label": "12 Tennis Courts",
       "courts": 12,
-      "fillRate": 78,
-      "revenue": 3618822,
+      "fillRate": 80,
+      "revenue": 3711613,
       "operatingCosts": 2772118,
-      "buildCost": 3105000,
+      "buildCost": 2435000,
       "incomeBreakdown": [
         {
           "label": "Membership",
@@ -847,7 +847,7 @@
       "buildBreakdown": [
         {
           "label": "Bubble",
-          "amount": 1800000,
+          "amount": 1050000,
           "firm": false
         },
         {
@@ -858,6 +858,11 @@
         {
           "label": "Excavation / Asphalt",
           "amount": 300000,
+          "firm": false
+        },
+        {
+          "label": "Court Surface (Quartz)",
+          "amount": 200000,
           "firm": false
         },
         {
@@ -872,17 +877,12 @@
         },
         {
           "label": "Natural Gas Service",
-          "amount": 40000,
+          "amount": 120000,
           "firm": false
         },
         {
           "label": "Water / Septic",
           "amount": 40000,
-          "firm": false
-        },
-        {
-          "label": "Court Surface (Quartz)",
-          "amount": 200000,
           "firm": false
         },
         {
@@ -913,7 +913,7 @@
       ]
     },
     "P": {
-      "label": "Pickleball \u2014 Coming Soon",
+      "label": "Pickleball — Coming Soon",
       "revenue": 0,
       "operatingCosts": 0,
       "buildCost": 0,
@@ -928,5 +928,6 @@
     "preferredReturn": 8,
     "craigEquity": 70,
     "partnerEquity": 30
-  }
+  },
+  "lastUpdated": "2026-07-31T19:04:43.828Z"
 }
