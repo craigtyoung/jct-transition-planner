@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JCT Transition Planner — Opportunities</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="style.css">
+<style>
+.opp-intro { background:#fff; border:1px solid var(--gray-100); border-radius:10px; padding:14px 16px; margin-bottom:18px; font-size:13px; color:var(--gray-700); line-height:1.55; }
+.opp-intro b { color:var(--navy); }
+.opp-toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:12px; flex-wrap:wrap; }
+.opp-counts { font-size:12px; color:var(--gray-500); }
+.opp-counts b { color:var(--navy); }
+.opp-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+@media (max-width:820px){ .opp-grid { grid-template-columns:1fr; } }
+.opp-card { border:1px solid var(--gray-100); border-radius:10px; padding:14px 16px; background:white; position:relative; transition:box-shadow .12s; }
+.opp-card:hover { box-shadow:0 2px 10px rgba(15,37,64,.06); }
+.opp-card input, .opp-card textarea, .opp-card select {
+  border:1px solid transparent; border-radius:5px; padding:4px 6px; width:100%;
+  font-family:inherit; color:var(--gray-700); background:transparent; transition:border-color .1s, background .1s;
+}
+.opp-card input:hover, .opp-card textarea:hover, .opp-card select:hover { background:var(--gray-50); }
+.opp-card input:focus, .opp-card textarea:focus, .opp-card select:focus { outline:none; border-color:var(--gray-200); background:white; }
+.opp-name { font-size:15px; font-weight:800; color:var(--navy) !important; }
+.opp-loc  { font-size:12px; font-style:italic; color:var(--gray-500) !important; }
+.opp-line { display:grid; grid-template-columns:88px 1fr; align-items:center; gap:4px; margin-top:5px; }
+.opp-line .lbl { font-size:10px; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:.05em; }
+.opp-notes { font-size:12px; line-height:1.5; resize:vertical; min-height:52px; margin-top:8px; }
+.opp-del { position:absolute; top:8px; right:8px; border:none; background:transparent; cursor:pointer; color:var(--gray-300); font-size:15px; line-height:1; padding:4px; border-radius:5px; }
+.opp-del:hover { color:#c0392b; background:var(--gray-50); }
+.opp-statusbar { display:flex; align-items:center; gap:8px; margin:8px 0 2px; padding-top:8px; border-top:1px solid var(--gray-50); }
+.opp-pill { font-size:11px; font-weight:800; border-radius:12px; padding:3px 11px; cursor:pointer; border:none; letter-spacing:.02em; }
+.opp-pill.gray{ background:var(--gray-100); color:var(--gray-500);} .opp-pill.blue{ background:#dbeafe; color:#1d4ed8;}
+.opp-pill.yellow{ background:#fef3c7; color:#b45309;} .opp-pill.green{ background:#dcfce7; color:#15803d;}
+.opp-pill.red{ background:#fee2e2; color:#b91c1c;}
+.opp-pill-hint { font-size:10px; color:var(--gray-300); }
+.btn-ghost { border:1px dashed var(--gray-200); background:transparent; color:var(--gray-500); cursor:pointer; font:600 12px system-ui; padding:8px 15px; border-radius:8px; transition:all .12s; }
+.btn-ghost:hover { border-color:var(--navy); color:var(--navy); }
+.dealtype { font-size:12px; font-weight:700; color:var(--navy); }
+</style>
+</head>
+<body>
+<script src="role.js"></script>
+
+<nav class="nav">
+  <div class="nav-brand">JCT <span>Transition Planner</span></div>
+  <div class="nav-links">
+    <a href="/" class="nav-link">Command Centre</a>
+    <a href="/opportunities.html" class="nav-link active">Opportunities</a>
+    <a href="/financial.html" class="nav-link">Financial Model</a>
+    <a href="/savings.html" class="nav-link">Savings Plan</a>
+    <a href="/timeline.html" class="nav-link">Timeline</a>
+    <a href="/checklist.html" class="nav-link">Wind-Down</a>
+    <a href="/context.html" class="nav-link">Context</a>
+  </div>
+  <div class="nav-save" id="save-indicator">✓ Saved</div>
+</nav>
+
+<div class="main">
+
+  <div class="page-header">
+    <div class="page-title">Opportunities</div>
+    <div class="page-subtitle">Target clubs and deal conversations — every path to JCT's next home, tracked in one pipeline</div>
+  </div>
+
+  <div class="opp-intro">
+    JCT's real asset is the <b>academy</b> (~72% of revenue), the members and waitlist, and the coaching expertise — not the building. This board tracks the clubs and partners we can bring that to. Each card is one opportunity: set the <b>deal type</b> (academy-only, partnership, buyout, build-partner) and move its <b>status</b> along the pipeline as conversations progress. Log who owns the relationship and the next action so nothing goes cold.
+  </div>
+
+  <div class="opp-toolbar">
+    <div class="opp-counts" id="opp-counts">—</div>
+    <button class="btn-ghost" onclick="addOpp()">+ Add opportunity</button>
+  </div>
+
+  <div id="opp-container">
+    <div style="color:var(--gray-300);text-align:center;padding:40px">Loading…</div>
+  </div>
+
+</div>
+
+<div class="footer" id="footer-ts">JCT Transition Planner · Updated —</div>
+
+<script>
+let data = { items: [] };
+let saveTimer = null;
+
+const uid = () => 'o' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36);
+function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+const DEAL_TYPES = ['Academy-only', 'Partnership / rev-share', 'Buyout / acquire', 'Build partner', 'Other'];
+const STATUS_FLOW = ['Idea', 'Outreach sent', 'In conversation', 'Exploring deal', 'Agreed', 'Passed'];
+const STATUS_COLOR = { 'Idea':'gray', 'Outreach sent':'blue', 'In conversation':'yellow', 'Exploring deal':'yellow', 'Agreed':'green', 'Passed':'red' };
+
+async function load() {
+  try { const res = await fetch('/api/opportunities'); if (res.ok) data = await res.json(); } catch (e) {}
+  if (!Array.isArray(data.items)) data.items = [];
+  render();
+  const ts = data.lastUpdated ? new Date(data.lastUpdated).toLocaleString() : '—';
+  document.getElementById('footer-ts').textContent = `JCT Transition Planner · Last saved: ${ts}`;
+}
+
+function counts() {
+  const live = data.items.filter(i => i.status && i.status !== 'Passed').length;
+  const talking = data.items.filter(i => ['In conversation','Exploring deal','Agreed'].includes(i.status)).length;
+  document.getElementById('opp-counts').innerHTML =
+    `<b>${data.items.length}</b> opportunities · <b>${live}</b> live · <b>${talking}</b> in active conversation`;
+}
+
+function render() {
+  const c = document.getElementById('opp-container');
+  c.innerHTML = '';
+  if (!data.items.length) {
+    c.innerHTML = '<div style="color:var(--gray-300);text-align:center;padding:40px">No opportunities yet. Click <strong>+ Add opportunity</strong> to log the first club.</div>';
+    counts();
+    return;
+  }
+  const grid = document.createElement('div');
+  grid.className = 'opp-grid';
+  data.items.forEach(it => grid.appendChild(cardEl(it)));
+  c.appendChild(grid);
+  counts();
+}
+
+function dealOptions(sel) {
+  return DEAL_TYPES.map(d => `<option ${d === sel ? 'selected' : ''}>${d}</option>`).join('');
+}
+
+function cardEl(it) {
+  const card = document.createElement('div');
+  card.className = 'opp-card';
+  const color = STATUS_COLOR[it.status] || 'gray';
+  card.innerHTML = `
+    <button class="opp-del" title="Delete opportunity" onclick="delOpp('${it.id}')">✕</button>
+    <input class="opp-name" placeholder="Club / partner name" value="${esc(it.name)}"
+           onchange="onField('${it.id}','name',this.value)">
+    <input class="opp-loc" placeholder="Location" value="${esc(it.location)}"
+           onchange="onField('${it.id}','location',this.value)">
+    <div class="opp-line"><span class="lbl">Deal type</span>
+      <select class="dealtype" onchange="onField('${it.id}','dealType',this.value)">${dealOptions(it.dealType)}</select></div>
+    <div class="opp-line"><span class="lbl">Owner</span>
+      <input placeholder="Who owns the relationship" value="${esc(it.owner)}"
+             onchange="onField('${it.id}','owner',this.value)"></div>
+    <div class="opp-line"><span class="lbl">Key contact</span>
+      <input placeholder="Name / role at the club" value="${esc(it.contact)}"
+             onchange="onField('${it.id}','contact',this.value)"></div>
+    <div class="opp-line"><span class="lbl">Next action</span>
+      <input placeholder="The next move" value="${esc(it.nextAction)}"
+             onchange="onField('${it.id}','nextAction',this.value)"></div>
+    <div class="opp-statusbar">
+      <button class="opp-pill ${color}" onclick="cycleStatus('${it.id}')">${esc(it.status || 'Idea')}</button>
+      <span class="opp-pill-hint">click to advance</span>
+    </div>
+    <textarea class="opp-notes" placeholder="History, value we bring, terms discussed, concerns…"
+              onchange="onField('${it.id}','notes',this.value)">${esc(it.notes)}</textarea>
+  `;
+  return card;
+}
+
+function item(id) { return data.items.find(i => i.id === id); }
+function onField(id, key, val) { const it = item(id); if (it) { it[key] = val; schedSave(); } }
+function cycleStatus(id) {
+  const it = item(id); if (!it) return;
+  const idx = (STATUS_FLOW.indexOf(it.status) + 1) % STATUS_FLOW.length;
+  it.status = STATUS_FLOW[idx];
+  render(); schedSave();
+}
+function addOpp() {
+  data.items.unshift({ id: uid(), name: '', location: '', dealType: 'Academy-only', status: 'Idea', owner: '', contact: '', nextAction: '', notes: '' });
+  render(); schedSave();
+}
+function delOpp(id) {
+  const it = item(id);
+  if (it && (it.name || it.notes) && !confirm(`Delete ${it.name || 'this opportunity'}?`)) return;
+  data.items = data.items.filter(i => i.id !== id);
+  render(); schedSave();
+}
+
+function schedSave() { clearTimeout(saveTimer); saveTimer = setTimeout(save, 900); }
+async function save() {
+  const res = await fetch('/api/opportunities', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+  });
+  if (res.ok) {
+    const el = document.getElementById('save-indicator');
+    el.classList.add('visible'); setTimeout(() => el.classList.remove('visible'), 2000);
+    const d = await res.json();
+    document.getElementById('footer-ts').textContent = `JCT Transition Planner · Last saved: ${new Date(d.timestamp).toLocaleString()}`;
+  }
+}
+
+load();
+</script>
+<script src="chat.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "items": [
+    {
+      "id": "rosedale",
+      "name": "Rosedale Tennis Club",
+      "location": "Hamilton area (confirm)",
+      "dealType": "Academy-only",
+      "status": "Outreach sent",
+      "owner": "Craig",
+      "contact": "Club director (long relationship)",
+      "nextAction": "Await reply, then have a conversation about whether there's an option",
+      "notes": "Craig knows the director well, good history. First target. He may help scope whether there's an option here. Confirm exact club/location (the well-known Rosedale Tennis Club is in Toronto)."
+    }
+  ]
+}
