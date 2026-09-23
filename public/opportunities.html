@@ -65,7 +65,7 @@
   </div>
 
   <div class="opp-intro">
-    JCT's real asset is the <b>academy</b> (~72% of revenue), the members and waitlist, and the coaching expertise — not the building. This board tracks the clubs and partners we can bring that to. Each card is one opportunity: set the <b>deal type</b> (academy-only, partnership, buyout, build-partner) and move its <b>status</b> along the pipeline as conversations progress. Log who owns the relationship and the next action so nothing goes cold.
+    JCT's real asset is the <b>academy</b> (~72% of revenue), the members and waitlist, and the coaching expertise — not the building. This board tracks the clubs, partners, and land we could bring that to. Each card is one opportunity: set the <b>deal type</b> (academy-only, partnership, buyout, build-partner, land/site) and move its <b>status</b> along the pipeline as conversations progress. Log who owns the relationship and the next action so nothing goes cold.
   </div>
 
   <div class="opp-toolbar">
@@ -88,7 +88,7 @@ let saveTimer = null;
 const uid = () => 'o' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36);
 function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
-const DEAL_TYPES = ['Academy-only', 'Partnership / rev-share', 'Buyout / acquire', 'Build partner', 'Other'];
+const DEAL_TYPES = ['Academy-only', 'Partnership / rev-share', 'Buyout / acquire', 'Build partner', 'Land / site', 'Other'];
 const STATUS_FLOW = ['Idea', 'Outreach sent', 'In conversation', 'Exploring deal', 'Agreed', 'Passed'];
 const STATUS_COLOR = { 'Idea':'gray', 'Outreach sent':'blue', 'In conversation':'yellow', 'Exploring deal':'yellow', 'Agreed':'green', 'Passed':'red' };
 
