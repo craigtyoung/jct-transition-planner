@@ -68,6 +68,7 @@
     <a href="/timeline.html" class="nav-link">Timeline</a>
     <a href="/checklist.html" class="nav-link">Wind-Down</a>
     <a href="/context.html" class="nav-link">Context</a>
+    <a href="/communications.html" class="nav-link">Communications</a>
   </div>
   <div class="nav-save" id="save-indicator">✓ Saved</div>
 </nav>
@@ -85,7 +86,10 @@
 
   <div class="opp-toolbar">
     <div class="opp-counts" id="opp-counts">—</div>
-    <button class="btn-ghost" onclick="addOpp()">+ Add opportunity</button>
+    <div style="display:flex;gap:8px">
+      <a class="btn-ghost" href="/communications.html" style="text-decoration:none;display:inline-block">✉ Communications</a>
+      <button class="btn-ghost" onclick="addOpp()">+ Add opportunity</button>
+    </div>
   </div>
 
   <div class="opp-cat-tabs" id="opp-cat-tabs"></div>

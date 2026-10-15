@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JCT Transition Planner — Communications</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="style.css">
+<style>
+.com-toolbar { display:flex; justify-content:flex-end; margin-bottom:18px; }
+.com-grid { display:flex; flex-direction:column; gap:16px; }
+.com-card { border:1px solid var(--gray-100); border-radius:10px; padding:16px 18px; background:white; position:relative; transition:box-shadow 0.12s; }
+.com-card:hover { box-shadow:0 2px 10px rgba(15,37,64,0.06); }
+.com-title { font-size:16px; font-weight:800; color:var(--navy); border:1px solid transparent; border-radius:6px; padding:4px 6px; width:100%; font-family:inherit; background:transparent; }
+.com-title:hover { background:var(--gray-50); }
+.com-title:focus { outline:none; border-color:var(--gray-200); background:white; }
+.com-body { width:100%; min-height:220px; font-size:13px; line-height:1.6; font-family:inherit; color:var(--gray-700); border:1px solid var(--gray-100); border-radius:7px; padding:10px 12px; margin-top:10px; resize:vertical; }
+.com-body:focus { outline:none; border-color:var(--gray-200); }
+.com-foot { display:flex; justify-content:space-between; align-items:center; margin-top:10px; }
+.com-meta { font-size:11px; color:var(--gray-500); }
+.com-actions { display:flex; gap:8px; }
+.com-dl { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:800; color:#fff; background:var(--navy); text-decoration:none; padding:7px 13px; border-radius:7px; border:none; cursor:pointer; }
+.com-dl:hover { background:#1d4ed8; }
+.com-del { border:none; background:transparent; cursor:pointer; color:var(--gray-300); font-size:14px; padding:4px 8px; border-radius:5px; }
+.com-del:hover { color:#c0392b; background:var(--gray-50); }
+.btn-ghost { border:1px dashed var(--gray-200); background:transparent; color:var(--gray-500); cursor:pointer; font:600 12px system-ui; padding:8px 15px; border-radius:8px; transition:all .12s; }
+.btn-ghost:hover { border-color:var(--navy); color:var(--navy); }
+</style>
+</head>
+<body>
+<script src="role.js"></script>
+
+<nav class="nav">
+  <div class="nav-brand">JCT <span>Transition Planner</span></div>
+  <div class="nav-links">
+    <a href="/" class="nav-link">Command Centre</a>
+    <a href="/opportunities.html" class="nav-link">Opportunities</a>
+    <a href="/financial.html" class="nav-link">Financial Model</a>
+    <a href="/savings.html" class="nav-link">Savings Plan</a>
+    <a href="/timeline.html" class="nav-link">Timeline</a>
+    <a href="/checklist.html" class="nav-link">Wind-Down</a>
+    <a href="/context.html" class="nav-link">Context</a>
+    <a href="/communications.html" class="nav-link active">Communications</a>
+  </div>
+  <div class="nav-save" id="save-indicator">✓ Saved</div>
+</nav>
+
+<div class="main">
+
+  <div class="page-header">
+    <div class="page-title">Communications</div>
+    <div class="page-subtitle">Reusable letters and outreach templates for Opportunities — edit here, download as a Word doc, send from there</div>
+  </div>
+
+  <div class="com-toolbar">
+    <button class="btn-ghost" onclick="addTemplate()">+ Add template</button>
+  </div>
+
+  <div id="com-container">
+    <div style="color:var(--gray-300);text-align:center;padding:40px">Loading…</div>
+  </div>
+
+</div>
+
+<div class="footer" id="footer-ts">JCT Transition Planner · Updated —</div>
+
+<script>
+let data = { items: [] };
+let saveTimer = null;
+
+const uid = () => 'c' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36);
+function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+async function load() {
+  try { const res = await fetch('/api/communications'); if (res.ok) data = await res.json(); } catch (e) {}
+  if (!Array.isArray(data.items)) data.items = [];
+  render();
+  const ts = data.lastUpdated ? new Date(data.lastUpdated).toLocaleString() : '—';
+  document.getElementById('footer-ts').textContent = `JCT Transition Planner · Last saved: ${ts}`;
+}
+
+function render() {
+  const c = document.getElementById('com-container');
+  c.innerHTML = '';
+  if (!data.items.length) {
+    c.innerHTML = '<div style="color:var(--gray-300);text-align:center;padding:40px">No templates yet. Click <strong>+ Add template</strong> to start one.</div>';
+    return;
+  }
+  const grid = document.createElement('div');
+  grid.className = 'com-grid';
+  data.items.forEach(it => grid.appendChild(cardEl(it)));
+  c.appendChild(grid);
+}
+
+function cardEl(it) {
+  const card = document.createElement('div');
+  card.className = 'com-card';
+  const updated = it.updatedAt ? new Date(it.updatedAt).toLocaleDateString() : '';
+  card.innerHTML = `
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+      <input class="com-title" placeholder="Template name" value="${esc(it.title)}"
+             onchange="onField('${it.id}','title',this.value)">
+      <button class="com-del" title="Delete template" onclick="delTemplate('${it.id}')">✕</button>
+    </div>
+    <textarea class="com-body" placeholder="Letter text…"
+              onchange="onField('${it.id}','body',this.value)">${esc(it.body)}</textarea>
+    <div class="com-foot">
+      <span class="com-meta">${updated ? 'Last edited ' + updated : ''}</span>
+      <div class="com-actions">
+        <a class="com-dl" href="/api/communications/${it.id}/download">⬇ Download as Word</a>
+      </div>
+    </div>
+  `;
+  return card;
+}
+
+function item(id) { return data.items.find(i => i.id === id); }
+function onField(id, key, val) {
+  const it = item(id);
+  if (it) { it[key] = val; it.updatedAt = new Date().toISOString(); schedSave(); }
+}
+function addTemplate() {
+  data.items.unshift({ id: uid(), title: 'New template', body: '', updatedAt: new Date().toISOString() });
+  render(); schedSave();
+}
+function delTemplate(id) {
+  const it = item(id);
+  if (it && (it.title || it.body) && !confirm(`Delete "${it.title || 'this template'}"?`)) return;
+  data.items = data.items.filter(i => i.id !== id);
+  render(); schedSave();
+}
+
+function schedSave() { clearTimeout(saveTimer); saveTimer = setTimeout(save, 900); }
+async function save() {
+  const res = await fetch('/api/communications', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+  });
+  if (res.ok) {
+    const el = document.getElementById('save-indicator');
+    el.classList.add('visible'); setTimeout(() => el.classList.remove('visible'), 2000);
+    const d = await res.json();
+    document.getElementById('footer-ts').textContent = `JCT Transition Planner · Last saved: ${new Date(d.timestamp).toLocaleString()}`;
+  }
+}
+
+load();
+</script>
+<script src="chat.js"></script>
+</body>
+</html>

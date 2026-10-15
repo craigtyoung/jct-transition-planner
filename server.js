@@ -164,6 +164,33 @@ Answer questions using ONLY the planner data below. Be concise, specific, and ci
   }
 });
 
+// GET /api/communications/:id/download — a communications template as a Word-compatible
+// .doc file (minimal HTML wrapped with the application/msword MIME type; Word opens this
+// natively). No new dependency needed for a one-off "download and edit in Word" need.
+app.get('/api/communications/:id/download', (req, res) => {
+  if (partnerScoped(req)) return res.status(403).send('Not available in the shared view.');
+  const filePath = path.join(DATA_DIR, 'communications.json');
+  if (!fs.existsSync(filePath)) return res.status(404).send('Not found');
+  let item;
+  try {
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    item = (data.items || []).find(i => i.id === req.params.id);
+  } catch { return res.status(500).send('Read error'); }
+  if (!item) return res.status(404).send('Not found');
+
+  const escHtml = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const paragraphs = String(item.body || '').split(/\n{2,}/)
+    .map(p => `<p>${escHtml(p).replace(/\n/g, '<br>')}</p>`).join('\n');
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escHtml(item.title)}</title>
+<style>body{font-family:Calibri,Arial,sans-serif;font-size:12pt;line-height:1.5;}</style></head>
+<body>${paragraphs || '<p></p>'}</body></html>`;
+
+  const safeName = (item.title || 'letter').replace(/[^a-z0-9 _-]/gi, '').trim() || 'letter';
+  res.setHeader('Content-Type', 'application/msword');
+  res.setHeader('Content-Disposition', `attachment; filename="${safeName}.doc"`);
+  res.send(html);
+});
+
 // GET /api/:file — read a JSON data file
 app.get('/api/:file', (req, res) => {
   const name = req.params.file.replace(/[^a-z0-9-]/gi, '');
