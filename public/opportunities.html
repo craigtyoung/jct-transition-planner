@@ -38,6 +38,21 @@
 .btn-ghost { border:1px dashed var(--gray-200); background:transparent; color:var(--gray-500); cursor:pointer; font:600 12px system-ui; padding:8px 15px; border-radius:8px; transition:all .12s; }
 .btn-ghost:hover { border-color:var(--navy); color:var(--navy); }
 .dealtype { font-size:12px; font-weight:700; color:var(--navy); }
+.opp-listing-btn { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:800; color:#fff; background:var(--navy); text-decoration:none; margin-top:8px; padding:6px 12px; border-radius:7px; }
+.opp-listing-btn:hover { background:#1d4ed8; }
+.opp-cat-tabs { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
+.opp-cat-tab { font-size:12px; font-weight:700; color:var(--gray-500); background:var(--gray-50); border:1px solid var(--gray-100); border-radius:8px; padding:6px 13px; cursor:pointer; }
+.opp-cat-tab.on { background:var(--navy); color:#fff; border-color:var(--navy); }
+.opp-card.pinned { border-color:#f59e0b; box-shadow:0 0 0 1px #f59e0b; }
+.opp-prio-wrap { position:absolute; top:6px; left:8px; display:flex; align-items:center; gap:4px; }
+.opp-prio { width:30px !important; height:26px; text-align:center; font-weight:800 !important; font-size:13px !important; color:var(--navy) !important; background:var(--gray-50) !important; border:1px solid var(--gray-200) !important; border-radius:6px; padding:0 !important; }
+.opp-prio-lbl { font-size:9px; font-weight:700; color:var(--gray-300); text-transform:uppercase; letter-spacing:.04em; }
+.opp-card { padding-top:34px; }
+.opp-cat-pill { display:inline-block; font-size:10px; font-weight:800; letter-spacing:.03em; text-transform:uppercase; padding:3px 9px; border-radius:100px; margin-top:4px; }
+.opp-cat-pill.realestate { background:#e0e7ff; color:#3730a3; }
+.opp-cat-pill.school { background:#dcfce7; color:#15803d; }
+.opp-cat-pill.athletic { background:#dbeafe; color:#1e40af; }
+.opp-cat-pill.other { background:#fef3c7; color:#b45309; }
 </style>
 </head>
 <body>
@@ -65,13 +80,15 @@
   </div>
 
   <div class="opp-intro">
-    JCT's real asset is the <b>academy</b> (~72% of revenue), the members and waitlist, and the coaching expertise — not the building. This board tracks the clubs, partners, and land we could bring that to. Each card is one opportunity: set the <b>deal type</b> (academy-only, partnership, buyout, build-partner, land/site) and move its <b>status</b> along the pipeline as conversations progress. Log who owns the relationship and the next action so nothing goes cold.
+    JCT's real asset is the <b>academy</b> (~72% of revenue), the members and waitlist, and the coaching expertise — not the building. This board tracks the clubs, partners, and land we could bring that to. Each card is one opportunity: set the <b>category</b> (build location, club partnership, or contact/lead) and <b>deal type</b>, move its <b>status</b> along the pipeline, and give it a <b>priority number</b> to pin your top picks to the top. Log who owns the relationship and the next action so nothing goes cold.
   </div>
 
   <div class="opp-toolbar">
     <div class="opp-counts" id="opp-counts">—</div>
     <button class="btn-ghost" onclick="addOpp()">+ Add opportunity</button>
   </div>
+
+  <div class="opp-cat-tabs" id="opp-cat-tabs"></div>
 
   <div id="opp-container">
     <div style="color:var(--gray-300);text-align:center;padding:40px">Loading…</div>
@@ -91,6 +108,10 @@ function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').
 const DEAL_TYPES = ['Academy-only', 'Partnership / rev-share', 'Buyout / acquire', 'Build partner', 'Land / site', 'Other'];
 const STATUS_FLOW = ['Idea', 'Outreach sent', 'In conversation', 'Exploring deal', 'Agreed', 'Passed'];
 const STATUS_COLOR = { 'Idea':'gray', 'Outreach sent':'blue', 'In conversation':'yellow', 'Exploring deal':'yellow', 'Agreed':'green', 'Passed':'red' };
+const CATEGORIES = ['Real Estate Listing', 'Private School', 'Athletic Club', 'Other'];
+const CAT_CLASS = { 'Real Estate Listing':'realestate', 'Private School':'school', 'Athletic Club':'athletic', 'Other':'other' };
+const DEFAULT_CATEGORY = 'Other';
+let catFilter = 'all';
 
 async function load() {
   try { const res = await fetch('/api/opportunities'); if (res.ok) data = await res.json(); } catch (e) {}
@@ -107,17 +128,37 @@ function counts() {
     `<b>${data.items.length}</b> opportunities · <b>${live}</b> live · <b>${talking}</b> in active conversation`;
 }
 
+// Priority pins float to the top (ascending 1,2,3…); unranked items keep their
+// existing relative order after that (stable sort, no mutation of stored order).
+function prioOf(it) { const n = parseInt(it.priority); return (n > 0) ? n : Infinity; }
+function visibleItems() {
+  let list = catFilter === 'all' ? data.items : data.items.filter(i => (i.category || DEFAULT_CATEGORY) === catFilter);
+  return [...list].sort((a, b) => prioOf(a) - prioOf(b));
+}
+
+function renderCatTabs() {
+  const catCounts = { all: data.items.length };
+  CATEGORIES.forEach(cat => catCounts[cat] = data.items.filter(i => (i.category || DEFAULT_CATEGORY) === cat).length);
+  const tabs = [['all', 'All']].concat(CATEGORIES.map(c => [c, c]));
+  document.getElementById('opp-cat-tabs').innerHTML = tabs.map(([key, label]) =>
+    `<button class="opp-cat-tab ${catFilter === key ? 'on' : ''}" onclick="setCatFilter('${key}')">${label} (${catCounts[key]})</button>`
+  ).join('');
+}
+function setCatFilter(key) { catFilter = key; render(); }
+
 function render() {
+  renderCatTabs();
   const c = document.getElementById('opp-container');
   c.innerHTML = '';
-  if (!data.items.length) {
-    c.innerHTML = '<div style="color:var(--gray-300);text-align:center;padding:40px">No opportunities yet. Click <strong>+ Add opportunity</strong> to log the first club.</div>';
+  const list = visibleItems();
+  if (!list.length) {
+    c.innerHTML = '<div style="color:var(--gray-300);text-align:center;padding:40px">Nothing here yet. Click <strong>+ Add opportunity</strong> to log one, or pick a different category tab.</div>';
     counts();
     return;
   }
   const grid = document.createElement('div');
   grid.className = 'opp-grid';
-  data.items.forEach(it => grid.appendChild(cardEl(it)));
+  list.forEach(it => grid.appendChild(cardEl(it)));
   c.appendChild(grid);
   counts();
 }
@@ -125,17 +166,30 @@ function render() {
 function dealOptions(sel) {
   return DEAL_TYPES.map(d => `<option ${d === sel ? 'selected' : ''}>${d}</option>`).join('');
 }
+function catOptions(sel) {
+  return CATEGORIES.map(c => `<option ${c === (sel || DEFAULT_CATEGORY) ? 'selected' : ''}>${c}</option>`).join('');
+}
 
 function cardEl(it) {
   const card = document.createElement('div');
-  card.className = 'opp-card';
+  const pinned = prioOf(it) !== Infinity;
+  card.className = 'opp-card' + (pinned ? ' pinned' : '');
   const color = STATUS_COLOR[it.status] || 'gray';
+  const catClass = CAT_CLASS[it.category || DEFAULT_CATEGORY];
   card.innerHTML = `
+    <div class="opp-prio-wrap">
+      <span class="opp-prio-lbl">#</span>
+      <input class="opp-prio" type="number" min="1" max="99" placeholder="—" value="${it.priority || ''}"
+             title="Priority — lower number pins higher" onchange="onField('${it.id}','priority', this.value ? parseInt(this.value) : null)">
+    </div>
     <button class="opp-del" title="Delete opportunity" onclick="delOpp('${it.id}')">✕</button>
     <input class="opp-name" placeholder="Club / partner name" value="${esc(it.name)}"
            onchange="onField('${it.id}','name',this.value)">
     <input class="opp-loc" placeholder="Location" value="${esc(it.location)}"
            onchange="onField('${it.id}','location',this.value)">
+    <span class="opp-cat-pill ${catClass}">${esc(it.category || DEFAULT_CATEGORY)}</span>
+    <div class="opp-line"><span class="lbl">Category</span>
+      <select onchange="onField('${it.id}','category',this.value)">${catOptions(it.category)}</select></div>
     <div class="opp-line"><span class="lbl">Deal type</span>
       <select class="dealtype" onchange="onField('${it.id}','dealType',this.value)">${dealOptions(it.dealType)}</select></div>
     <div class="opp-line"><span class="lbl">Owner</span>
@@ -147,6 +201,10 @@ function cardEl(it) {
     <div class="opp-line"><span class="lbl">Next action</span>
       <input placeholder="The next move" value="${esc(it.nextAction)}"
              onchange="onField('${it.id}','nextAction',this.value)"></div>
+    <div class="opp-line"><span class="lbl">Listing</span>
+      <input placeholder="MLS / realtor.ca link" value="${esc(it.listingUrl || '')}"
+             onchange="onField('${it.id}','listingUrl',this.value)"></div>
+    ${it.listingUrl ? `<a class="opp-listing-btn" href="${esc(it.listingUrl)}" target="_blank" rel="noopener">View MLS Listing ↗</a>` : ''}
     <div class="opp-statusbar">
       <button class="opp-pill ${color}" onclick="cycleStatus('${it.id}')">${esc(it.status || 'Idea')}</button>
       <span class="opp-pill-hint">click to advance</span>
@@ -166,7 +224,7 @@ function cycleStatus(id) {
   render(); schedSave();
 }
 function addOpp() {
-  data.items.unshift({ id: uid(), name: '', location: '', dealType: 'Academy-only', status: 'Idea', owner: '', contact: '', nextAction: '', notes: '' });
+  data.items.unshift({ id: uid(), name: '', location: '', category: DEFAULT_CATEGORY, dealType: 'Academy-only', status: 'Idea', owner: '', contact: '', nextAction: '', listingUrl: '', priority: null, notes: '' });
   render(); schedSave();
 }
 function delOpp(id) {
