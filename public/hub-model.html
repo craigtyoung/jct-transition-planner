@@ -61,6 +61,15 @@
 .hub-fac-divider { border-top:1px solid var(--gray-100); margin:4px 0 16px; }
 .hub-fac-readout { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
 @media (max-width:820px){ .hub-fac-readout { grid-template-columns:repeat(2,1fr); } }
+.hub-gallery { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+@media (max-width:1000px){ .hub-gallery { grid-template-columns:1fr; } }
+.hub-gallery a { display:block; border-radius:10px; overflow:hidden; border:1px solid var(--gray-100); position:relative; }
+.hub-gallery img { display:block; width:100%; height:220px; object-fit:cover; object-position:top; transition:transform .2s; }
+.hub-gallery a:hover img { transform:scale(1.03); }
+.hub-gallery-cap { font-size:11px; color:var(--gray-700); padding:8px 10px; background:var(--gray-50); }
+.hub-chip-strip { display:flex; flex-wrap:wrap; gap:8px; }
+.hub-chip { border-radius:999px; padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer; border:2px solid; transition:all .12s; font-family:inherit; }
+.hub-chip:hover { filter:brightness(0.95); }
 </style>
 </head>
 <body>
@@ -105,6 +114,29 @@
     <div style="margin-top:10px">
       <a href="/research-links.html" style="text-decoration:none;font:700 12px system-ui;color:#1F5E3A">📑 Hub Research — facility comps, equipment suppliers, potential locations →</a>
     </div>
+  </div>
+
+  <div class="card section">
+    <div class="card-title">Concept Visuals <span style="font-weight:500;font-size:11px;color:var(--gray-500);text-transform:none;letter-spacing:0">— click any board to open it full size</span></div>
+    <div class="hub-gallery">
+      <a href="images/hub-concept-3.png" target="_blank" rel="noopener">
+        <img src="images/hub-concept-3.png" alt="Interior renders — entrance, simulator bays, pro shop, studio, physio, office">
+        <div class="hub-gallery-cap">Interior renders — entrance, simulator bays, pro shop, group fitness studio, physio, manager office</div>
+      </a>
+      <a href="images/hub-concept-1.png" target="_blank" rel="noopener">
+        <img src="images/hub-concept-1.png" alt="Floor plan + room-by-room renders, option A">
+        <div class="hub-gallery-cap">Floor plan (~6,000 sq ft) + room-by-room renders — Option A, v1</div>
+      </a>
+      <a href="images/hub-concept-2.png" target="_blank" rel="noopener">
+        <img src="images/hub-concept-2.png" alt="Floor plan + room-by-room renders, option A alternate layout">
+        <div class="hub-gallery-cap">Floor plan + room-by-room renders — Option A, alternate layout</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="card section">
+    <div class="card-title">Modules at a Glance <span style="font-weight:500;font-size:11px;color:var(--gray-500);text-transform:none;letter-spacing:0">— click a chip to include/exclude it from the totals below</span></div>
+    <div class="hub-chip-strip" id="module-toggle-strip"></div>
   </div>
 
   <div class="card section" id="summary-card">
@@ -212,6 +244,13 @@ function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').
 function num(v) { const n = parseFloat(v); return isNaN(n) ? 0 : n; }
 function money(n) { return '$' + Math.round(n).toLocaleString(); }
 
+const MODULE_COLORS = ['#2563EB','#DB2777','#D97706','#059669','#7C3AED','#0891B2','#DC2626','#65A30D','#EA580C','#4F46E5'];
+function hexToRgba(hex, alpha) {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0, 2), 16), g = parseInt(h.substring(2, 4), 16), b = parseInt(h.substring(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
 const MODULE_TYPES = [
   'Tennis-Fitness Zone', 'Simulator Bay', 'Rally Lanes', 'Smart Wall',
   'Group Fitness Studio', 'Physio / Massage Room', 'Coffee / Juice Bar + Lounge',
@@ -309,7 +348,26 @@ function onFacField(key, val) {
   schedSave();
 }
 
+function renderToggleStrip() {
+  const wrap = document.getElementById('module-toggle-strip');
+  if (!data.modules.length) {
+    wrap.innerHTML = '<div style="color:var(--gray-300);font-size:12px">No modules yet — add one below and it\'ll show up here.</div>';
+    return;
+  }
+  wrap.innerHTML = data.modules.map((m, i) => {
+    const color = MODULE_COLORS[i % MODULE_COLORS.length];
+    const isIn = included(m);
+    const q = qtyOf(m);
+    const label = esc(m.name || m.type || 'Module') + (q > 1 ? ` ×${q}` : '');
+    const style = isIn
+      ? `border-color:${color};background:${hexToRgba(color, 0.12)};color:${color}`
+      : `border-color:var(--gray-200);background:var(--gray-50);color:var(--gray-500)`;
+    return `<button class="hub-chip" style="${style}" onclick="onField('${m.id}','includeInTotals',${!isIn})" title="${isIn ? 'Click to exclude from totals' : 'Click to include in totals'}">${isIn ? '●' : '○'} ${label}</button>`;
+  }).join('');
+}
+
 function render() {
+  renderToggleStrip();
   renderSummary();
   renderFacility();
   const c = document.getElementById('hub-container');
@@ -364,10 +422,7 @@ function cardEl(m) {
         <input type="checkbox" id="rented-${m.id}" ${m.rented ? 'checked' : ''} onchange="onField('${m.id}','rented',this.checked)">
         <label for="rented-${m.id}">Rented</label>
       </span>
-      <span class="hub-check" title="Include this module in the Model Totals summary above">
-        <input type="checkbox" id="included-${m.id}" ${isIn ? 'checked' : ''} onchange="onField('${m.id}','includeInTotals',this.checked)">
-        <label for="included-${m.id}">Included</label>
-      </span>
+      <span style="font-size:11px;color:var(--gray-500)">Include/exclude this module from the chip strip at the top of the page</span>
     </div>
     ${multi ? `<div class="hub-subtotal">× <b>${s.qty}</b> units = <b>${s.sqft.toLocaleString()}</b> sq ft · <b>${money(s.build)}</b> build · <b>${money(s.revenue)}</b>/mo rev · <b>${money(s.opCost)}</b>/mo op</div>` : ''}
     <textarea class="hub-notes" placeholder="Layout notes, who'd run it, open questions…"
