@@ -84,12 +84,6 @@
     Not a tennis club, not a generic gym — the <b>JCT Performance Hub</b>: a racquet-sport fitness &amp; performance facility. People train here (fitness classes, simulators, rally lanes, smart walls, physio) and play elsewhere — or come back here between programs, since the Hub manages their training regardless of where they play. Build the facility one <b>module</b> at a time: each module is a space (owned/operated, or rented out to an operator) with its own footprint and economics. The totals below roll up into a rough live picture of the whole model — swap estimates for real numbers as they firm up.
   </div>
 
-  <div class="card section">
-    <div class="card-title">Research Notes</div>
-    <textarea id="research-notes" placeholder="Cost research, comps, open questions — anything not tied to a single module…"
-              style="min-height:80px" onchange="onIntro(this.value)"></textarea>
-  </div>
-
   <div class="card section" id="summary-card">
     <div class="card-title">Model Totals <span style="font-weight:500;font-size:11px;color:var(--gray-500);text-transform:none;letter-spacing:0">— across included modules only, × quantity. Toggle a module's "Include in model totals" to flip it in/out.</span></div>
     <div class="hub-summary-grid">
@@ -128,6 +122,12 @@
   <div id="hub-container">
     <div style="color:var(--gray-300);text-align:center;padding:40px">Loading…</div>
   </div>
+
+  <details class="card section" style="padding:16px 20px" open>
+    <summary style="cursor:pointer;font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.08em">Research Notes</summary>
+    <textarea id="research-notes" placeholder="Cost research, comps, open questions — anything not tied to a single module…"
+              style="min-height:100px;margin-top:12px" onchange="onIntro(this.value)"></textarea>
+  </details>
 
 </div>
 
