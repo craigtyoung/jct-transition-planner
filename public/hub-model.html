@@ -36,23 +36,32 @@
 .btn-ghost:hover { border-color:var(--navy); color:var(--navy); }
 .hub-summary-net.green { color: var(--green); }
 .hub-summary-net.red { color: var(--red); }
+
+/* This page feels like a new idea, not the rest of the build-planner — tennis green instead of navy. */
+.nav { background: #1F5E3A !important; }
+.nav-link.active { background: rgba(255,255,255,0.22) !important; }
+.page-title { color: #1F5E3A !important; }
+.hub-card:hover { box-shadow: 0 2px 10px rgba(31,94,58,.12) !important; }
+.hub-type-pill { background: #E3F2E7 !important; color: #1F5E3A !important; }
+.btn-ghost:hover { border-color: #1F5E3A !important; color: #1F5E3A !important; }
+#summary-card .big-num:not(.hub-summary-net):not(.green) { color: #1F5E3A !important; }
 </style>
 </head>
 <body>
 <script src="role.js"></script>
 
 <nav class="nav">
-  <div class="nav-brand">JCT <span>Transition Planner</span></div>
+  <div class="nav-brand">JCT <span>Performance Hub</span></div>
   <div class="nav-links">
     <a href="/" class="nav-link">Command Centre</a>
     <a href="/opportunities.html" class="nav-link">Opportunities</a>
-    <a href="/hub-model.html" class="nav-link active">Performance Hub</a>
     <a href="/financial.html" class="nav-link">Financial Model</a>
     <a href="/savings.html" class="nav-link">Savings Plan</a>
     <a href="/timeline.html" class="nav-link">Timeline</a>
     <a href="/checklist.html" class="nav-link">Wind-Down</a>
     <a href="/context.html" class="nav-link">Context</a>
     <a href="/communications.html" class="nav-link">Communications</a>
+    <a href="/hub-model.html" class="nav-link active">Performance Hub</a>
   </div>
   <div class="nav-save" id="save-indicator">✓ Saved</div>
 </nav>
@@ -66,6 +75,12 @@
 
   <div class="hub-intro">
     Not a tennis club, not a generic gym — the <b>JCT Performance Hub</b>: a racquet-sport fitness &amp; performance facility. People train here (fitness classes, simulators, rally lanes, smart walls, physio) and play elsewhere — or come back here between programs, since the Hub manages their training regardless of where they play. Build the facility one <b>module</b> at a time: each module is a space (owned/operated, or rented out to an operator) with its own footprint and economics. The totals below roll up into a rough live picture of the whole model — swap estimates for real numbers as they firm up.
+  </div>
+
+  <div class="card section">
+    <div class="card-title">Research Notes</div>
+    <textarea id="research-notes" placeholder="Cost research, comps, open questions — anything not tied to a single module…"
+              style="min-height:80px" onchange="onIntro(this.value)"></textarea>
   </div>
 
   <div class="card section" id="summary-card">
@@ -122,6 +137,7 @@ const DEFAULT_TYPE = 'Other';
 async function load() {
   try { const res = await fetch('/api/hub-model'); if (res.ok) data = await res.json(); } catch (e) {}
   if (!Array.isArray(data.modules)) data.modules = [];
+  document.getElementById('research-notes').value = data.intro || '';
   render();
   const ts = data.lastUpdated ? new Date(data.lastUpdated).toLocaleString() : '—';
   document.getElementById('footer-ts').textContent = `JCT Transition Planner · Last saved: ${ts}`;
@@ -202,6 +218,7 @@ function cardEl(m) {
   return card;
 }
 
+function onIntro(val) { data.intro = val; schedSave(); }
 function moduleItem(id) { return data.modules.find(m => m.id === id); }
 function onField(id, key, val) { const m = moduleItem(id); if (m) { m[key] = val; render(); schedSave(); } }
 function addModule() {
