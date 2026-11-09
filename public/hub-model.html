@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JCT Transition Planner — Performance Hub</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="style.css">
+<style>
+.hub-intro { background:#fff; border:1px solid var(--gray-100); border-radius:10px; padding:14px 16px; margin-bottom:18px; font-size:13px; color:var(--gray-700); line-height:1.55; }
+.hub-intro b { color:var(--navy); }
+.hub-toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:12px; flex-wrap:wrap; }
+.hub-counts { font-size:12px; color:var(--gray-500); }
+.hub-counts b { color:var(--navy); }
+.hub-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+@media (max-width:820px){ .hub-grid { grid-template-columns:1fr; } }
+.hub-card { border:1px solid var(--gray-100); border-radius:10px; padding:14px 16px; background:white; position:relative; transition:box-shadow .12s; }
+.hub-card:hover { box-shadow:0 2px 10px rgba(15,37,64,.06); }
+.hub-card input, .hub-card textarea, .hub-card select {
+  border:1px solid transparent; border-radius:5px; padding:4px 6px; width:100%;
+  font-family:inherit; color:var(--gray-700); background:transparent; transition:border-color .1s, background .1s;
+}
+.hub-card input:hover, .hub-card textarea:hover, .hub-card select:hover { background:var(--gray-50); }
+.hub-card input:focus, .hub-card textarea:focus, .hub-card select:focus { outline:none; border-color:var(--gray-200); background:white; }
+.hub-name { font-size:15px; font-weight:800; color:var(--navy) !important; }
+.hub-type-pill { display:inline-block; font-size:10px; font-weight:800; letter-spacing:.03em; text-transform:uppercase; padding:3px 9px; border-radius:100px; margin-top:4px; background:var(--gray-100); color:var(--navy); }
+.hub-type-pill.rented { background:#dcfce7; color:#15803d; }
+.hub-line { display:grid; grid-template-columns:110px 1fr; align-items:center; gap:4px; margin-top:5px; }
+.hub-line .lbl { font-size:10px; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:.05em; }
+.hub-notes { font-size:12px; line-height:1.5; resize:vertical; min-height:52px; margin-top:8px; }
+.hub-del { position:absolute; top:8px; right:8px; border:none; background:transparent; cursor:pointer; color:var(--gray-300); font-size:15px; line-height:1; padding:4px; border-radius:5px; }
+.hub-del:hover { color:#c0392b; background:var(--gray-50); }
+.hub-rented-wrap { display:flex; align-items:center; gap:6px; margin-top:8px; }
+.hub-rented-wrap label { font-size:11px; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:.05em; }
+.btn-ghost { border:1px dashed var(--gray-200); background:transparent; color:var(--gray-500); cursor:pointer; font:600 12px system-ui; padding:8px 15px; border-radius:8px; transition:all .12s; }
+.btn-ghost:hover { border-color:var(--navy); color:var(--navy); }
+.hub-summary-net.green { color: var(--green); }
+.hub-summary-net.red { color: var(--red); }
+</style>
+</head>
+<body>
+<script src="role.js"></script>
+
+<nav class="nav">
+  <div class="nav-brand">JCT <span>Transition Planner</span></div>
+  <div class="nav-links">
+    <a href="/" class="nav-link">Command Centre</a>
+    <a href="/opportunities.html" class="nav-link">Opportunities</a>
+    <a href="/hub-model.html" class="nav-link active">Performance Hub</a>
+    <a href="/financial.html" class="nav-link">Financial Model</a>
+    <a href="/savings.html" class="nav-link">Savings Plan</a>
+    <a href="/timeline.html" class="nav-link">Timeline</a>
+    <a href="/checklist.html" class="nav-link">Wind-Down</a>
+    <a href="/context.html" class="nav-link">Context</a>
+    <a href="/communications.html" class="nav-link">Communications</a>
+  </div>
+  <div class="nav-save" id="save-indicator">✓ Saved</div>
+</nav>
+
+<div class="main">
+
+  <div class="page-header">
+    <div class="page-title">JCT Performance Hub</div>
+    <div class="page-subtitle">A related, facility-light racquet-sport fitness &amp; performance business — module by module</div>
+  </div>
+
+  <div class="hub-intro">
+    Not a tennis club, not a generic gym — the <b>JCT Performance Hub</b>: a racquet-sport fitness &amp; performance facility. People train here (fitness classes, simulators, rally lanes, smart walls, physio) and play elsewhere — or come back here between programs, since the Hub manages their training regardless of where they play. Build the facility one <b>module</b> at a time: each module is a space (owned/operated, or rented out to an operator) with its own footprint and economics. The totals below roll up into a rough live picture of the whole model — swap estimates for real numbers as they firm up.
+  </div>
+
+  <div class="card section" id="summary-card">
+    <div class="card-title">Model Totals</div>
+    <div class="grid-4 gap-20">
+      <div>
+        <div class="big-num" id="sum-sqft">—</div>
+        <div class="num-label">Total sq ft</div>
+      </div>
+      <div>
+        <div class="big-num" id="sum-build">—</div>
+        <div class="num-label">Total build / setup cost</div>
+      </div>
+      <div>
+        <div class="big-num green" id="sum-revenue">—</div>
+        <div class="num-label">Total monthly revenue</div>
+      </div>
+      <div>
+        <div class="big-num" id="sum-net">—</div>
+        <div class="num-label">Net monthly (revenue − op cost)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hub-toolbar">
+    <div class="hub-counts" id="hub-counts">—</div>
+    <button class="btn-ghost" onclick="addModule()">+ Add module</button>
+  </div>
+
+  <div id="hub-container">
+    <div style="color:var(--gray-300);text-align:center;padding:40px">Loading…</div>
+  </div>
+
+</div>
+
+<div class="footer" id="footer-ts">JCT Transition Planner · Updated —</div>
+
+<script>
+let data = { intro: '', modules: [] };
+let saveTimer = null;
+
+const uid = () => 'm' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36);
+function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function num(v) { const n = parseFloat(v); return isNaN(n) ? 0 : n; }
+function money(n) { return '$' + Math.round(n).toLocaleString(); }
+
+const MODULE_TYPES = [
+  'Tennis-Fitness Zone', 'Simulator Bay', 'Rally Lanes', 'Smart Wall',
+  'Group Fitness Studio', 'Physio / Massage Room', 'Coffee / Juice Bar + Lounge',
+  'Kids Program Space', 'Off-Site / School Gym', 'Other'
+];
+const DEFAULT_TYPE = 'Other';
+
+async function load() {
+  try { const res = await fetch('/api/hub-model'); if (res.ok) data = await res.json(); } catch (e) {}
+  if (!Array.isArray(data.modules)) data.modules = [];
+  render();
+  const ts = data.lastUpdated ? new Date(data.lastUpdated).toLocaleString() : '—';
+  document.getElementById('footer-ts').textContent = `JCT Transition Planner · Last saved: ${ts}`;
+}
+
+function totals() {
+  let sqft = 0, build = 0, revenue = 0, opCost = 0;
+  data.modules.forEach(m => {
+    sqft += num(m.sqft); build += num(m.buildCost);
+    revenue += num(m.monthlyRevenue); opCost += num(m.monthlyOpCost);
+  });
+  return { sqft, build, revenue, opCost, net: revenue - opCost };
+}
+
+function counts() {
+  document.getElementById('hub-counts').innerHTML = `<b>${data.modules.length}</b> module${data.modules.length === 1 ? '' : 's'} defined`;
+}
+
+function renderSummary() {
+  const t = totals();
+  document.getElementById('sum-sqft').textContent = t.sqft ? t.sqft.toLocaleString() : '—';
+  document.getElementById('sum-build').textContent = t.build ? money(t.build) : '—';
+  document.getElementById('sum-revenue').textContent = t.revenue ? money(t.revenue) : '—';
+  const netEl = document.getElementById('sum-net');
+  netEl.textContent = (t.revenue || t.opCost) ? money(t.net) : '—';
+  netEl.className = 'big-num hub-summary-net ' + (t.net > 0 ? 'green' : (t.net < 0 ? 'red' : ''));
+}
+
+function render() {
+  renderSummary();
+  const c = document.getElementById('hub-container');
+  c.innerHTML = '';
+  if (!data.modules.length) {
+    c.innerHTML = '<div style="color:var(--gray-300);text-align:center;padding:40px">No modules yet. Click <strong>+ Add module</strong> to start sketching the facility — a simulator bay, a physio room, a group-fitness studio, whatever\'s next.</div>';
+    counts();
+    return;
+  }
+  const grid = document.createElement('div');
+  grid.className = 'hub-grid';
+  data.modules.forEach(m => grid.appendChild(cardEl(m)));
+  c.appendChild(grid);
+  counts();
+}
+
+function typeOptions(sel) {
+  return MODULE_TYPES.map(t => `<option ${t === (sel || DEFAULT_TYPE) ? 'selected' : ''}>${t}</option>`).join('');
+}
+
+function cardEl(m) {
+  const card = document.createElement('div');
+  card.className = 'hub-card';
+  card.innerHTML = `
+    <button class="hub-del" title="Delete module" onclick="delModule('${m.id}')">✕</button>
+    <input class="hub-name" placeholder="Module name" value="${esc(m.name)}"
+           onchange="onField('${m.id}','name',this.value)">
+    <span class="hub-type-pill ${m.rented ? 'rented' : ''}">${esc(m.type || DEFAULT_TYPE)}${m.rented ? ' · Rented out' : ''}</span>
+    <div class="hub-line"><span class="lbl">Type</span>
+      <select onchange="onField('${m.id}','type',this.value)">${typeOptions(m.type)}</select></div>
+    <div class="hub-line"><span class="lbl">Sq ft</span>
+      <input type="number" min="0" placeholder="0" value="${m.sqft || ''}"
+             onchange="onField('${m.id}','sqft',this.value)"></div>
+    <div class="hub-line"><span class="lbl">Build cost</span>
+      <input type="number" min="0" placeholder="$0" value="${m.buildCost || ''}"
+             onchange="onField('${m.id}','buildCost',this.value)"></div>
+    <div class="hub-line"><span class="lbl">Monthly revenue</span>
+      <input type="number" min="0" placeholder="$0" value="${m.monthlyRevenue || ''}"
+             onchange="onField('${m.id}','monthlyRevenue',this.value)"></div>
+    <div class="hub-line"><span class="lbl">Monthly op cost</span>
+      <input type="number" min="0" placeholder="$0" value="${m.monthlyOpCost || ''}"
+             onchange="onField('${m.id}','monthlyOpCost',this.value)"></div>
+    <div class="hub-rented-wrap">
+      <input type="checkbox" id="rented-${m.id}" ${m.rented ? 'checked' : ''} onchange="onField('${m.id}','rented',this.checked)">
+      <label for="rented-${m.id}">Rented out to an operator (not JCT-run)</label>
+    </div>
+    <textarea class="hub-notes" placeholder="Layout notes, who'd run it, open questions…"
+              onchange="onField('${m.id}','notes',this.value)">${esc(m.notes)}</textarea>
+  `;
+  return card;
+}
+
+function moduleItem(id) { return data.modules.find(m => m.id === id); }
+function onField(id, key, val) { const m = moduleItem(id); if (m) { m[key] = val; render(); schedSave(); } }
+function addModule() {
+  data.modules.unshift({ id: uid(), name: '', type: DEFAULT_TYPE, sqft: '', buildCost: '', monthlyRevenue: '', monthlyOpCost: '', rented: false, notes: '' });
+  render(); schedSave();
+}
+function delModule(id) {
+  const m = moduleItem(id);
+  if (m && (m.name || m.notes) && !confirm(`Delete ${m.name || 'this module'}?`)) return;
+  data.modules = data.modules.filter(x => x.id !== id);
+  render(); schedSave();
+}
+
+function schedSave() { clearTimeout(saveTimer); saveTimer = setTimeout(save, 900); }
+async function save() {
+  const res = await fetch('/api/hub-model', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+  });
+  if (res.ok) {
+    const el = document.getElementById('save-indicator');
+    el.classList.add('visible'); setTimeout(() => el.classList.remove('visible'), 2000);
+    const d = await res.json();
+    document.getElementById('footer-ts').textContent = `JCT Transition Planner · Last saved: ${new Date(d.timestamp).toLocaleString()}`;
+  }
+}
+
+load();
+</script>
+<script src="chat.js"></script>
+</body>
+</html>
