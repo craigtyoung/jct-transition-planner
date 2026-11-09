@@ -30,8 +30,10 @@
 .hub-notes { font-size:12px; line-height:1.5; resize:vertical; min-height:52px; margin-top:8px; }
 .hub-del { position:absolute; top:8px; right:8px; border:none; background:transparent; cursor:pointer; color:var(--gray-300); font-size:15px; line-height:1; padding:4px; border-radius:5px; }
 .hub-del:hover { color:#c0392b; background:var(--gray-50); }
-.hub-rented-wrap { display:flex; align-items:center; gap:6px; margin-top:8px; }
-.hub-rented-wrap label { font-size:11px; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:.05em; }
+.hub-rented-wrap { display:flex; align-items:center; gap:16px; margin-top:8px; flex-wrap:wrap; }
+.hub-check { display:flex; align-items:center; gap:5px; cursor:help; }
+.hub-check input { width:auto !important; }
+.hub-check label { font-size:11px; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:.05em; cursor:help; }
 .hub-card.excluded { opacity:0.55; }
 .hub-excluded-tag { position:absolute; top:8px; left:14px; font-size:9px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--gray-500); background:var(--gray-100); border-radius:8px; padding:2px 8px; }
 .hub-subtotal { font-size:11px; color:var(--gray-500); margin-top:8px; padding-top:8px; border-top:1px solid var(--gray-50); line-height:1.6; }
@@ -61,15 +63,25 @@
   <div class="nav-brand">JCT <span>Performance Hub</span></div>
   <div class="nav-links">
     <a href="/" class="nav-link">Command Centre</a>
-    <a href="/opportunities.html" class="nav-link">Opportunities</a>
-    <a href="/financial.html" class="nav-link">Financial Model</a>
-    <a href="/savings.html" class="nav-link">Savings Plan</a>
-    <a href="/timeline.html" class="nav-link">Timeline</a>
-    <a href="/checklist.html" class="nav-link">Wind-Down</a>
-    <a href="/context.html" class="nav-link">Context</a>
-    <a href="/communications.html" class="nav-link">Communications</a>
-    <a href="/hub-model.html" class="nav-link active">Performance Hub</a>
-    <a href="/research-links.html" class="nav-link">Hub Research</a>
+    <div class="nav-dropdown">
+      <span class="nav-link">Build Planner <span class="nav-dropdown-caret">▾</span></span>
+      <div class="nav-dropdown-menu">
+        <a href="/opportunities.html">Opportunities</a>
+        <a href="/financial.html">Financial Model</a>
+        <a href="/savings.html">Savings Plan</a>
+        <a href="/timeline.html">Timeline</a>
+        <a href="/checklist.html">Wind-Down</a>
+        <a href="/context.html">Context</a>
+        <a href="/communications.html">Communications</a>
+      </div>
+    </div>
+    <div class="nav-dropdown">
+      <span class="nav-link active">Performance Hub <span class="nav-dropdown-caret">▾</span></span>
+      <div class="nav-dropdown-menu">
+        <a href="/hub-model.html" class="active">Overview</a>
+        <a href="/research-links.html">Research</a>
+      </div>
+    </div>
   </div>
   <div class="nav-save" id="save-indicator">✓ Saved</div>
 </nav>
@@ -83,6 +95,9 @@
 
   <div class="hub-intro">
     Not a tennis club, not a generic gym — the <b>JCT Performance Hub</b>: a racquet-sport fitness &amp; performance facility. People train here (fitness classes, simulators, rally lanes, smart walls, physio) and play elsewhere — or come back here between programs, since the Hub manages their training regardless of where they play. Build the facility one <b>module</b> at a time: each module is a space (owned/operated, or rented out to an operator) with its own footprint and economics. The totals below roll up into a rough live picture of the whole model — swap estimates for real numbers as they firm up.
+    <div style="margin-top:10px">
+      <a href="/research-links.html" style="text-decoration:none;font:700 12px system-ui;color:#1F5E3A">📑 Hub Research — facility comps, equipment suppliers, potential locations →</a>
+    </div>
   </div>
 
   <div class="card section" id="summary-card">
@@ -245,12 +260,14 @@ function cardEl(m) {
       <input type="number" min="0" placeholder="$0" value="${m.monthlyOpCost || ''}"
              onchange="onField('${m.id}','monthlyOpCost',this.value)"></div>
     <div class="hub-rented-wrap">
-      <input type="checkbox" id="rented-${m.id}" ${m.rented ? 'checked' : ''} onchange="onField('${m.id}','rented',this.checked)">
-      <label for="rented-${m.id}">Rented out to an operator (not JCT-run)</label>
-    </div>
-    <div class="hub-rented-wrap">
-      <input type="checkbox" id="included-${m.id}" ${isIn ? 'checked' : ''} onchange="onField('${m.id}','includeInTotals',this.checked)">
-      <label for="included-${m.id}">Include in model totals</label>
+      <span class="hub-check" title="Rented out to an operator, not JCT-run">
+        <input type="checkbox" id="rented-${m.id}" ${m.rented ? 'checked' : ''} onchange="onField('${m.id}','rented',this.checked)">
+        <label for="rented-${m.id}">Rented</label>
+      </span>
+      <span class="hub-check" title="Include this module in the Model Totals summary above">
+        <input type="checkbox" id="included-${m.id}" ${isIn ? 'checked' : ''} onchange="onField('${m.id}','includeInTotals',this.checked)">
+        <label for="included-${m.id}">Included</label>
+      </span>
     </div>
     ${multi ? `<div class="hub-subtotal">× <b>${s.qty}</b> units = <b>${s.sqft.toLocaleString()}</b> sq ft · <b>${money(s.build)}</b> build · <b>${money(s.revenue)}</b>/mo rev · <b>${money(s.opCost)}</b>/mo op</div>` : ''}
     <textarea class="hub-notes" placeholder="Layout notes, who'd run it, open questions…"
