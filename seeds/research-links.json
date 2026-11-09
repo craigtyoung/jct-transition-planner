@@ -1,0 +1,39 @@
+{
+  "items": [
+    {
+      "id": "rl-plock-001",
+      "category": "Facility / Comp",
+      "name": "Plock Tennis Club",
+      "url": "https://ploektennisclub.ca",
+      "notes": "Real-world comp, Toronto area. Indoor courts, ball-machine training, rally court, lessons for all levels. No simulators found -- reinforces simulators as a likely differentiator."
+    },
+    {
+      "id": "rl-v1sim-001",
+      "category": "Equipment Supplier",
+      "name": "V1 Tennis Simulator (Tennis Social AI)",
+      "url": "https://tennis.com/baseline/articles/the-new-v1-tennis-simulator-combines-entertainment-and-skill-based-games-for-players-at-every-level",
+      "notes": "Tennis-specific simulator, pre-sale as of 2025, no public pricing. Contact directly for a real quote."
+    },
+    {
+      "id": "rl-walljam-001",
+      "category": "Equipment Supplier",
+      "name": "WallJAM (smart wall sensors)",
+      "url": "https://iee-sensing.com/app/uploads/2021/08/customer-case-study-walljam-iee.pdf",
+      "notes": "Sensor-based smart rebound wall, customer case study."
+    },
+    {
+      "id": "rl-adeco-001",
+      "category": "Equipment Supplier",
+      "name": "ADECO SPORT (tennis wall sensors)",
+      "url": "https://twi-global.com/media-and-events/insights/walljam-beat-the-best-622",
+      "notes": "Sensor system designed to retrofit onto existing hitting walls -- possible path to a smart pickleball wall (no competitor exists yet)."
+    },
+    {
+      "id": "rl-volley-001",
+      "category": "Equipment Supplier",
+      "name": "Volley AI Ball Machine",
+      "url": "https://www.yahoo.com/lifestyle/volleys-ai-enabled-ball-machine-130020570.html",
+      "notes": "AI-enabled ball machine for racquet sports -- relevant to Rally Lanes / kids volume-training concept."
+    }
+  ]
+}

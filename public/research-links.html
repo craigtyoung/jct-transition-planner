@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JCT Transition Planner — Performance Hub Research</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="style.css">
+<style>
+.rl-intro { background:#fff; border:1px solid var(--gray-100); border-radius:10px; padding:14px 16px; margin-bottom:18px; font-size:13px; color:var(--gray-700); line-height:1.55; }
+.rl-intro b { color:#1F5E3A; }
+.rl-toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:12px; flex-wrap:wrap; }
+.rl-counts { font-size:12px; color:var(--gray-500); }
+.rl-counts b { color:#1F5E3A; }
+.rl-cat-tabs { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
+.rl-cat-tab { font-size:12px; font-weight:700; color:var(--gray-500); background:var(--gray-50); border:1px solid var(--gray-100); border-radius:8px; padding:6px 13px; cursor:pointer; }
+.rl-cat-tab.on { background:#1F5E3A; color:#fff; border-color:#1F5E3A; }
+.rl-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+@media (max-width:820px){ .rl-grid { grid-template-columns:1fr; } }
+.rl-card { border:1px solid var(--gray-100); border-radius:10px; padding:14px 16px; background:white; position:relative; transition:box-shadow .12s; }
+.rl-card:hover { box-shadow:0 2px 10px rgba(31,94,58,.12); }
+.rl-card input, .rl-card textarea, .rl-card select {
+  border:1px solid transparent; border-radius:5px; padding:4px 6px; width:100%;
+  font-family:inherit; color:var(--gray-700); background:transparent; transition:border-color .1s, background .1s;
+}
+.rl-card input:hover, .rl-card textarea:hover, .rl-card select:hover { background:var(--gray-50); }
+.rl-card input:focus, .rl-card textarea:focus, .rl-card select:focus { outline:none; border-color:var(--gray-200); background:white; }
+.rl-name { font-size:15px; font-weight:800; color:#1F5E3A !important; }
+.rl-cat-pill { display:inline-block; font-size:10px; font-weight:800; letter-spacing:.03em; text-transform:uppercase; padding:3px 9px; border-radius:100px; margin-top:4px; background:#E3F2E7; color:#1F5E3A; }
+.rl-line { display:grid; grid-template-columns:70px 1fr; align-items:center; gap:4px; margin-top:5px; }
+.rl-line .lbl { font-size:10px; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:.05em; }
+.rl-notes { font-size:12px; line-height:1.5; resize:vertical; min-height:52px; margin-top:8px; }
+.rl-del { position:absolute; top:8px; right:8px; border:none; background:transparent; cursor:pointer; color:var(--gray-300); font-size:15px; line-height:1; padding:4px; border-radius:5px; }
+.rl-del:hover { color:#c0392b; background:var(--gray-50); }
+.rl-visit-btn { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:800; color:#fff; background:#1F5E3A; text-decoration:none; margin-top:8px; padding:6px 12px; border-radius:7px; }
+.rl-visit-btn:hover { background:#17472c; }
+.btn-ghost { border:1px dashed var(--gray-200); background:transparent; color:var(--gray-500); cursor:pointer; font:600 12px system-ui; padding:8px 15px; border-radius:8px; transition:all .12s; }
+.btn-ghost:hover { border-color:#1F5E3A; color:#1F5E3A; }
+
+/* Same tennis-green identity as the Performance Hub page — same family, same feel. */
+.nav { background: #1F5E3A !important; }
+.nav-link.active { background: rgba(255,255,255,0.22) !important; }
+.page-title { color: #1F5E3A !important; }
+</style>
+</head>
+<body>
+<script src="role.js"></script>
+
+<nav class="nav">
+  <div class="nav-brand">JCT <span>Performance Hub</span></div>
+  <div class="nav-links">
+    <a href="/" class="nav-link">Command Centre</a>
+    <a href="/opportunities.html" class="nav-link">Opportunities</a>
+    <a href="/financial.html" class="nav-link">Financial Model</a>
+    <a href="/savings.html" class="nav-link">Savings Plan</a>
+    <a href="/timeline.html" class="nav-link">Timeline</a>
+    <a href="/checklist.html" class="nav-link">Wind-Down</a>
+    <a href="/context.html" class="nav-link">Context</a>
+    <a href="/communications.html" class="nav-link">Communications</a>
+    <a href="/hub-model.html" class="nav-link">Performance Hub</a>
+    <a href="/research-links.html" class="nav-link active">Hub Research</a>
+  </div>
+  <div class="nav-save" id="save-indicator">✓ Saved</div>
+</nav>
+
+<div class="main">
+
+  <div class="page-header">
+    <div class="page-title">Performance Hub Research</div>
+    <div class="page-subtitle">Facilities who've done this, equipment suppliers, and potential locations — all in one bookmark list</div>
+  </div>
+
+  <div class="rl-intro">
+    A running links list for the <b>JCT Performance Hub</b> concept — real facilities to study, equipment/supplier sites to get quotes from, and real estate to consider. Add a link, tag its category, jot a note on why it matters. No deal-tracking workflow here (that's what <a href="/opportunities.html" style="color:#1F5E3A">Opportunities</a> is for) — this is just the research shelf.
+  </div>
+
+  <div class="rl-toolbar">
+    <div class="rl-counts" id="rl-counts">—</div>
+    <button class="btn-ghost" onclick="addLink()">+ Add link</button>
+  </div>
+
+  <div class="rl-cat-tabs" id="rl-cat-tabs"></div>
+
+  <div id="rl-container">
+    <div style="color:var(--gray-300);text-align:center;padding:40px">Loading…</div>
+  </div>
+
+</div>
+
+<div class="footer" id="footer-ts">JCT Transition Planner · Updated —</div>
+
+<script>
+let data = { items: [] };
+let saveTimer = null;
+
+const uid = () => 'rl' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36);
+function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+const CATEGORIES = ['Facility / Comp', 'Equipment Supplier', 'Potential Location', 'Other'];
+const DEFAULT_CATEGORY = 'Other';
+let catFilter = 'all';
+
+async function load() {
+  try { const res = await fetch('/api/research-links'); if (res.ok) data = await res.json(); } catch (e) {}
+  if (!Array.isArray(data.items)) data.items = [];
+  render();
+  const ts = data.lastUpdated ? new Date(data.lastUpdated).toLocaleString() : '—';
+  document.getElementById('footer-ts').textContent = `JCT Transition Planner · Last saved: ${ts}`;
+}
+
+function counts() {
+  document.getElementById('rl-counts').innerHTML = `<b>${data.items.length}</b> link${data.items.length === 1 ? '' : 's'} saved`;
+}
+
+function visibleItems() {
+  return catFilter === 'all' ? data.items : data.items.filter(i => (i.category || DEFAULT_CATEGORY) === catFilter);
+}
+
+function renderCatTabs() {
+  const catCounts = { all: data.items.length };
+  CATEGORIES.forEach(cat => catCounts[cat] = data.items.filter(i => (i.category || DEFAULT_CATEGORY) === cat).length);
+  const tabs = [['all', 'All']].concat(CATEGORIES.map(c => [c, c]));
+  document.getElementById('rl-cat-tabs').innerHTML = tabs.map(([key, label]) =>
+    `<button class="rl-cat-tab ${catFilter === key ? 'on' : ''}" onclick="setCatFilter('${key}')">${label} (${catCounts[key]})</button>`
+  ).join('');
+}
+function setCatFilter(key) { catFilter = key; render(); }
+
+function render() {
+  renderCatTabs();
+  const c = document.getElementById('rl-container');
+  c.innerHTML = '';
+  const list = visibleItems();
+  if (!list.length) {
+    c.innerHTML = '<div style="color:var(--gray-300);text-align:center;padding:40px">Nothing here yet. Click <strong>+ Add link</strong> to save a facility, supplier, or location.</div>';
+    counts();
+    return;
+  }
+  const grid = document.createElement('div');
+  grid.className = 'rl-grid';
+  list.forEach(it => grid.appendChild(cardEl(it)));
+  c.appendChild(grid);
+  counts();
+}
+
+function catOptions(sel) {
+  return CATEGORIES.map(c => `<option ${c === (sel || DEFAULT_CATEGORY) ? 'selected' : ''}>${c}</option>`).join('');
+}
+
+function cardEl(it) {
+  const card = document.createElement('div');
+  card.className = 'rl-card';
+  card.innerHTML = `
+    <button class="rl-del" title="Delete link" onclick="delLink('${it.id}')">✕</button>
+    <input class="rl-name" placeholder="Name" value="${esc(it.name)}"
+           onchange="onField('${it.id}','name',this.value)">
+    <span class="rl-cat-pill">${esc(it.category || DEFAULT_CATEGORY)}</span>
+    <div class="rl-line"><span class="lbl">Category</span>
+      <select onchange="onField('${it.id}','category',this.value)">${catOptions(it.category)}</select></div>
+    <div class="rl-line"><span class="lbl">URL</span>
+      <input placeholder="https://…" value="${esc(it.url)}"
+             onchange="onField('${it.id}','url',this.value)"></div>
+    ${it.url ? `<a class="rl-visit-btn" href="${esc(it.url)}" target="_blank" rel="noopener">Visit ↗</a>` : ''}
+    <textarea class="rl-notes" placeholder="Why this matters, what to check…"
+              onchange="onField('${it.id}','notes',this.value)">${esc(it.notes)}</textarea>
+  `;
+  return card;
+}
+
+function item(id) { return data.items.find(i => i.id === id); }
+function onField(id, key, val) { const it = item(id); if (it) { it[key] = val; render(); schedSave(); } }
+function addLink() {
+  data.items.unshift({ id: uid(), name: '', category: DEFAULT_CATEGORY, url: '', notes: '' });
+  render(); schedSave();
+}
+function delLink(id) {
+  const it = item(id);
+  if (it && (it.name || it.notes) && !confirm(`Delete ${it.name || 'this link'}?`)) return;
+  data.items = data.items.filter(i => i.id !== id);
+  render(); schedSave();
+}
+
+function schedSave() { clearTimeout(saveTimer); saveTimer = setTimeout(save, 900); }
+async function save() {
+  const res = await fetch('/api/research-links', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+  });
+  if (res.ok) {
+    const el = document.getElementById('save-indicator');
+    el.classList.add('visible'); setTimeout(() => el.classList.remove('visible'), 2000);
+    const d = await res.json();
+    document.getElementById('footer-ts').textContent = `JCT Transition Planner · Last saved: ${new Date(d.timestamp).toLocaleString()}`;
+  }
+}
+
+load();
+</script>
+</body>
+</html>
