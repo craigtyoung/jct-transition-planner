@@ -32,6 +32,8 @@
 .hub-del:hover { color:#c0392b; background:var(--gray-50); }
 .hub-rented-wrap { display:flex; align-items:center; gap:6px; margin-top:8px; }
 .hub-rented-wrap label { font-size:11px; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:.05em; }
+.hub-card.excluded { opacity:0.55; }
+.hub-excluded-tag { position:absolute; top:8px; left:14px; font-size:9px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--gray-500); background:var(--gray-100); border-radius:8px; padding:2px 8px; }
 .hub-subtotal { font-size:11px; color:var(--gray-500); margin-top:8px; padding-top:8px; border-top:1px solid var(--gray-50); line-height:1.6; }
 .hub-subtotal b { color:var(--navy); }
 .hub-qty-line input { font-weight:700; }
@@ -89,7 +91,7 @@
   </div>
 
   <div class="card section" id="summary-card">
-    <div class="card-title">Model Totals <span style="font-weight:500;font-size:11px;color:var(--gray-500);text-transform:none;letter-spacing:0">— across all modules, × quantity</span></div>
+    <div class="card-title">Model Totals <span style="font-weight:500;font-size:11px;color:var(--gray-500);text-transform:none;letter-spacing:0">— across included modules only, × quantity. Toggle a module's "Include in model totals" to flip it in/out.</span></div>
     <div class="hub-summary-grid">
       <div>
         <div class="big-num" id="sum-sqft">—</div>
@@ -143,7 +145,8 @@ function money(n) { return '$' + Math.round(n).toLocaleString(); }
 const MODULE_TYPES = [
   'Tennis-Fitness Zone', 'Simulator Bay', 'Rally Lanes', 'Smart Wall',
   'Group Fitness Studio', 'Physio / Massage Room', 'Coffee / Juice Bar + Lounge',
-  'Pro Shop', 'Outdoor Courts', 'Kids Program Space', 'Off-Site / School Gym', 'Other'
+  'Pro Shop', 'Outdoor Courts', 'Group Lessons', 'Kids Program Space',
+  'Off-Site / School Gym', 'Other'
 ];
 const DEFAULT_TYPE = 'Other';
 
@@ -161,9 +164,10 @@ function moduleSubtotal(m) {
   const q = qtyOf(m);
   return { qty: q, sqft: num(m.sqft) * q, build: num(m.buildCost) * q, revenue: num(m.monthlyRevenue) * q, opCost: num(m.monthlyOpCost) * q };
 }
+function included(m) { return m.includeInTotals !== false; }
 function totals() {
   let sqft = 0, build = 0, revenue = 0, opCost = 0;
-  data.modules.forEach(m => {
+  data.modules.filter(included).forEach(m => {
     const s = moduleSubtotal(m);
     sqft += s.sqft; build += s.build; revenue += s.revenue; opCost += s.opCost;
   });
@@ -171,7 +175,9 @@ function totals() {
 }
 
 function counts() {
-  document.getElementById('hub-counts').innerHTML = `<b>${data.modules.length}</b> module${data.modules.length === 1 ? '' : 's'} defined`;
+  const n = data.modules.length;
+  const inc = data.modules.filter(included).length;
+  document.getElementById('hub-counts').innerHTML = `<b>${n}</b> module${n === 1 ? '' : 's'} defined · <b>${inc}</b> included in totals`;
 }
 
 function renderSummary() {
@@ -210,10 +216,12 @@ function typeOptions(sel) {
 
 function cardEl(m) {
   const card = document.createElement('div');
-  card.className = 'hub-card';
+  const isIn = included(m);
+  card.className = 'hub-card' + (isIn ? '' : ' excluded');
   const s = moduleSubtotal(m);
   const multi = s.qty > 1;
   card.innerHTML = `
+    ${isIn ? '' : '<span class="hub-excluded-tag">Excluded from totals</span>'}
     <button class="hub-del" title="Delete module" onclick="delModule('${m.id}')">✕</button>
     <input class="hub-name" placeholder="Module name" value="${esc(m.name)}"
            onchange="onField('${m.id}','name',this.value)">
@@ -238,6 +246,10 @@ function cardEl(m) {
     <div class="hub-rented-wrap">
       <input type="checkbox" id="rented-${m.id}" ${m.rented ? 'checked' : ''} onchange="onField('${m.id}','rented',this.checked)">
       <label for="rented-${m.id}">Rented out to an operator (not JCT-run)</label>
+    </div>
+    <div class="hub-rented-wrap">
+      <input type="checkbox" id="included-${m.id}" ${isIn ? 'checked' : ''} onchange="onField('${m.id}','includeInTotals',this.checked)">
+      <label for="included-${m.id}">Include in model totals</label>
     </div>
     ${multi ? `<div class="hub-subtotal">× <b>${s.qty}</b> units = <b>${s.sqft.toLocaleString()}</b> sq ft · <b>${money(s.build)}</b> build · <b>${money(s.revenue)}</b>/mo rev · <b>${money(s.opCost)}</b>/mo op</div>` : ''}
     <textarea class="hub-notes" placeholder="Layout notes, who'd run it, open questions…"
